@@ -10,8 +10,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const SESSIZLIK_ESIGI_DB = -46;
 const KONUSMA_ESIGI_DB = -37;
-const SESSIZLIK_SURESI_MS = 950;
-const AZAMI_KAYIT_MS = 20_000;
+const SESSIZLIK_SURESI_MS = 1200; // Sessizlik süresini biraz artırdık
+const AZAMI_KAYIT_MS = 15_000; // Azami kayıt süresini 15 saniyeye çektik
 
 export type SesOturumuDurumu = "hazir" | "izin-gerekli" | "kaydediyor" | "isleniyor" | "hata";
 
@@ -31,22 +31,22 @@ const KAYIT_SECENEKLERI = {
 
 export function useAkrepVoice({ onKayitTamamlandi }: UseAkrepVoiceOptions = {}) {
   const recorder = useAudioRecorder(KAYIT_SECENEKLERI);
-  const recorderState = useAudioRecorderState(recorder, 90);
+  const recorderState = useAudioRecorderState(recorder, 100);
   const [oturumDurumu, setOturumDurumu] = useState<SesOturumuDurumu>("hazir");
   const [hata, setHata] = useState<string | null>(null);
   const [sonKayitUri, setSonKayitUri] = useState<string | null>(null);
+  
   const konusmaAlgilandiRef = useRef(false);
   const sessizlikBaslangiciRef = useRef<number | null>(null);
   const durduruluyorRef = useRef(false);
   const onKayitTamamlandiRef = useRef(onKayitTamamlandi);
-  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     onKayitTamamlandiRef.current = onKayitTamamlandi;
   }, [onKayitTamamlandi]);
 
   const durdur = useCallback(async () => {
-    if (durduruluyorRef.current || !recorderState.isRecording) return;
+    if (durduruluyorRef.current) return;
     durduruluyorRef.current = true;
     setOturumDurumu("isleniyor");
 
@@ -54,10 +54,22 @@ export function useAkrepVoice({ onKayitTamamlandi }: UseAkrepVoiceOptions = {}) 
       const sureMs = recorderState.durationMillis;
       await recorder.stop();
       const uri = recorder.uri;
-      if (!uri) throw new Error("Kayıt dosyası oluşturulamadı.");
+      
+      if (!uri) {
+        throw new Error("Kayıt dosyası oluşturulamadı.");
+      }
 
       setSonKayitUri(uri);
-      await onKayitTamamlandiRef.current?.({ uri, sureMs });
+      // Callback'i beklemeden durumu güncellemek için await kullanmıyoruz veya 
+      // callback içindeki hataların süreci tıkamasını engelliyoruz
+      if (onKayitTamamlandiRef.current) {
+        try {
+          await onKayitTamamlandiRef.current({ uri, sureMs });
+        } catch (e) {
+          console.warn("Callback error:", e);
+        }
+      }
+      
       setOturumDurumu("hazir");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ses kaydı durdurulamadı.";
@@ -69,11 +81,13 @@ export function useAkrepVoice({ onKayitTamamlandi }: UseAkrepVoiceOptions = {}) 
       sessizlikBaslangiciRef.current = null;
       konusmaAlgilandiRef.current = false;
     }
-  }, [recorder, recorderState.durationMillis, recorderState.isRecording]);
+  }, [recorder, recorderState.durationMillis]);
 
+  // Otomatik durdurma mantığı
   useEffect(() => {
-    if (!recorderState.isRecording) return;
+    if (!recorderState.isRecording || durduruluyorRef.current) return;
 
+    // Azami süre aşımı
     if (recorderState.durationMillis >= AZAMI_KAYIT_MS) {
       void durdur();
       return;
@@ -82,16 +96,19 @@ export function useAkrepVoice({ onKayitTamamlandi }: UseAkrepVoiceOptions = {}) 
     const metering = recorderState.metering;
     if (typeof metering !== "number") return;
 
+    // Konuşma algılama
     if (metering >= KONUSMA_ESIGI_DB) {
       konusmaAlgilandiRef.current = true;
       sessizlikBaslangiciRef.current = null;
-      return;
-    }
-
-    if (konusmaAlgilandiRef.current && metering <= SESSIZLIK_ESIGI_DB) {
+    } 
+    // Sessizlik algılama (sadece konuşma başladıktan sonra)
+    else if (konusmaAlgilandiRef.current && metering <= SESSIZLIK_ESIGI_DB) {
       const simdi = Date.now();
-      sessizlikBaslangiciRef.current ??= simdi;
-      if (simdi - sessizlikBaslangiciRef.current >= SESSIZLIK_SURESI_MS) void durdur();
+      if (sessizlikBaslangiciRef.current === null) {
+        sessizlikBaslangiciRef.current = simdi;
+      } else if (simdi - sessizlikBaslangiciRef.current >= SESSIZLIK_SURESI_MS) {
+        void durdur();
+      }
     } else {
       sessizlikBaslangiciRef.current = null;
     }
@@ -115,8 +132,10 @@ export function useAkrepVoice({ onKayitTamamlandi }: UseAkrepVoiceOptions = {}) 
         allowsRecording: true,
         interruptionMode: "doNotMix",
       });
+      
       await recorder.prepareToRecordAsync();
       recorder.record();
+      
       konusmaAlgilandiRef.current = false;
       sessizlikBaslangiciRef.current = null;
       setOturumDurumu("kaydediyor");
@@ -131,22 +150,14 @@ export function useAkrepVoice({ onKayitTamamlandi }: UseAkrepVoiceOptions = {}) 
   }, [recorder, recorderState.isRecording]);
 
   const birak = useCallback(() => {
-    if (!recorderState.isRecording) return;
-    if (typeof recorderState.metering !== "number") {
+    if (recorderState.isRecording && !durduruluyorRef.current) {
       void durdur();
     }
-  }, [durdur, recorderState.isRecording, recorderState.metering]);
+  }, [durdur, recorderState.isRecording]);
 
   const sifirla = useCallback(() => {
     setHata(null);
     setOturumDurumu("hazir");
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      cleanupRef.current?.();
-      durduruluyorRef.current = false;
-    };
   }, []);
 
   const normalizeGenlik = Math.max(0.18, Math.min(1, ((recorderState.metering ?? -60) + 60) / 42));

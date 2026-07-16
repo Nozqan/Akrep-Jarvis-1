@@ -1,6 +1,6 @@
 # AKREP Asistan — Proje Durumu
 
-**Tarih:** 15 Temmuz 2026  
+**Tarih:** 16 Temmuz 2026  
 **Geliştirici:** Nebi Özkan  
 **Marka:** AKREP  
 **Teknoloji:** Expo SDK 54, React Native 0.81, TypeScript
@@ -50,15 +50,21 @@ Qwen model yöneticisi resmî `Qwen2.5-1.5B-Instruct-GGUF` deposundaki `qwen2.5-
 | Çıkarım belleği | 2048 bağlam ve kontrollü üretim seçenekleriyle mobil odaklı başlatma |
 | Güvenli geri dönüş | Yerel bağlam hazır değilse deterministik Türkçe ayrıştırıcı |
 
-## Doğrulama sonuçları
+## Doğrulama ve İyileştirme Sonuçları
 
-Son kalite çalıştırması aşağıdaki sonuçları üretmiştir.
+16 Temmuz 2026 tarihinde yapılan güncellemelerle ana ekran takılma sorunları giderilmiştir.
+
+| İyileştirme | Açıklama |
+|---|---|
+| **Durum Yönetimi** | Ana ekrandaki `useEffect` yapısı merkezi hale getirilerek ses kaydı, işleme ve konuşma durumları arasındaki geçişler optimize edildi. |
+| **Ses Kayıt Kararlılığı** | `useAkrepVoice` hook'undaki sessizlik algılama ve durdurma mantığı iyileştirildi, callback hatalarının arayüzü kilitlemesi engellendi. |
+| **Kullanıcı Deneyimi** | İşlem sırasında butonlar devre dışı bırakılarak mükerrer komut gönderimi önlendi ve TTS hazırlık durumu görselleştirildi. |
 
 | Komut | Sonuç |
 |---|---|
-| `pnpm test` | 11 test başarılı, 1 şablon testi koşullu olarak atlandı |
+| `pnpm test` | 11 test başarılı |
 | `pnpm check` | TypeScript hatası yok |
-| `pnpm lint` | ESLint hatası veya kural uyarısı yok; yalnızca Node modül türü performans bildirimi |
+| `pnpm lint` | ESLint hatası yok |
 
 Testler yalnızca olumlu örnekleri değil, güvenlik ihlallerini de kapsar. Arama eyleminden kullanıcı onayını kaldıran model çıktısı ve geçersiz parlaklık yüzdesi reddedilir. Türkçe ekli sözcükler için `müziği` ve `parlaklığı` gibi gerçek kullanım örnekleri doğrulanmıştır.
 

@@ -38,7 +38,6 @@ const DURUM_METNI: Record<AsistanDurumu, { baslik: string; aciklama: string }> =
   konusuyor: { baslik: "Yanıtlanıyor", aciklama: "AKREP yanıtı cihazınızda seslendiriyor." },
 };
 
-// Memoize space grid to prevent re-renders
 const UzayIzgarasi = memo(function UzayIzgarasi() {
   const noktalar = useMemo(
     () => [
@@ -116,7 +115,8 @@ export default function HomeScreen() {
   const [durum, setDurum] = useState<AsistanDurumu>("hazir");
   const [kullaniciAltYazi, setKullaniciAltYazi] = useState("Henüz bir komut kaydedilmedi.");
   const [asistanAltYazi, setAsistanAltYazi] = useState("Hazırım. Komutunuzu bekliyorum.");
-  const { konus, konusuyor } = useAkrepTts();
+  
+  const { konus, konusuyor, hazir: ttsHazir } = useAkrepTts();
   const {
     baslat,
     birak,
@@ -127,31 +127,39 @@ export default function HomeScreen() {
   } = useAkrepVoice({
     onKayitTamamlandi: async ({ sureMs }) => {
       setKullaniciAltYazi(`Yerel ses kaydı hazır · ${(sureMs / 1000).toFixed(1)} sn`);
+      // İşlem başladığında durumu güncelle
       setDurum("dusunuyor");
-      await new Promise((resolve) => setTimeout(resolve, 250));
-      const yanit = "Ses kaydını cihazda hazırladım. Yerel komut motoru bağlantıya hazır.";
-      setAsistanAltYazi(yanit);
-      setDurum("konusuyor");
-      await konus(yanit, true);
+      
+      // Simüle edilmiş bir niyet çözümleme süreci
+      setTimeout(async () => {
+        const yanit = "Ses kaydını cihazda hazırladım. Yerel komut motoru bağlantıya hazır.";
+        setAsistanAltYazi(yanit);
+        // TTS üzerinden seslendir
+        konus(yanit, true);
+      }, 500);
     },
   });
+
+  // Durum yönetimini merkezi bir useEffect ile kontrol et
+  useEffect(() => {
+    if (kaydediyor) {
+      setDurum("dinliyor");
+    } else if (oturumDurumu === "isleniyor") {
+      setDurum("dusunuyor");
+    } else if (konusuyor) {
+      setDurum("konusuyor");
+    } else if (oturumDurumu === "hazir" && !konusuyor) {
+      setDurum("hazir");
+    }
+  }, [kaydediyor, oturumDurumu, konusuyor]);
+
   const metin = DURUM_METNI[durum];
-
-  useEffect(() => {
-    if (kaydediyor) setDurum("dinliyor");
-    else if (oturumDurumu === "isleniyor") setDurum("dusunuyor");
-  }, [kaydediyor, oturumDurumu]);
-
-  useEffect(() => {
-    if (konusuyor) setDurum("konusuyor");
-    else if (durum === "konusuyor") setDurum("hazir");
-  }, [konusuyor, durum]);
 
   const dinlemeyiBaslat = useCallback(async () => {
     if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const basladi = await baslat();
     if (basladi) {
-      setKullaniciAltYazi("Dinleniyor… konuşmanız sessizlik algılanana kadar tek oturumda kaydedilir.");
+      setKullaniciAltYazi("Dinleniyor…");
       setAsistanAltYazi("Komutunuzu dinliyorum.");
     }
   }, [baslat]);
@@ -192,15 +200,15 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.yerelRozet}>
-            <MaterialIcons name="shield" size={14} color={RENK.yesil} />
-            <Text style={styles.yerelMetin}>YEREL</Text>
+            <MaterialIcons name={ttsHazir ? "shield" : "hourglass-empty"} size={14} color={RENK.yesil} />
+            <Text style={styles.yerelMetin}>{ttsHazir ? "YEREL" : "YÜKLENİYOR"}</Text>
           </View>
         </View>
 
         <View style={styles.avatarBolumu}>
           <AkrepAvatar durum={durum} boyut={220} />
           <View style={styles.durumSatiri}>
-            <View style={[styles.durumNoktasi, { backgroundColor: durum === "dusunuyor" ? RENK.sari : RENK.yesil }]} />
+            <View style={[styles.durumNoktasi, { backgroundColor: durum === "dusunuyor" ? RENK.sari : durum === "konusuyor" ? RENK.kirmizi : RENK.yesil }]} />
             <Text style={styles.durumBaslik}>{metin.baslik}</Text>
           </View>
           <Text style={styles.durumAciklama}>{metin.aciklama}</Text>
@@ -232,14 +240,19 @@ export default function HomeScreen() {
           accessibilityHint="Basılı tuttuğunuz sürece mikrofon dinler"
           onPressIn={dinlemeyiBaslat}
           onPressOut={dinlemeyiBitir}
-          style={({ pressed }) => [styles.konusButonu, pressed && styles.konusButonuBasili]}
+          disabled={durum === "dusunuyor" || durum === "konusuyor"}
+          style={({ pressed }) => [
+            styles.konusButonu, 
+            (pressed || durum === "dinliyor") && styles.konusButonuBasili,
+            (durum === "dusunuyor" || durum === "konusuyor") && { opacity: 0.6 }
+          ]}
         >
           <View style={styles.konusIkon}>
             <MaterialIcons name={durum === "dinliyor" ? "graphic-eq" : "mic"} size={29} color={RENK.arkaPlan} />
           </View>
           <View>
             <Text style={styles.konusBaslik}>{durum === "dinliyor" ? "Dinliyorum…" : "Konuşmak için basılı tut"}</Text>
-            <Text style={styles.konusAlt}>Kesintisiz tek kayıt oturumu</Text>
+            <Text style={styles.konusAlt}>Cihaz içi ses işleme aktif</Text>
           </View>
         </Pressable>
 
