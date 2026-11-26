@@ -1,5 +1,9 @@
 # AKREP JARVIS
 
+Paket adı: `com.akrep.jarvis.ai`
+
+Geliştirici: Nebi Özkan / AKREP
+
 AKREP JARVIS için Kotlin ve Jetpack Compose tabanlı Android uygulama temeli.
 
 ## İlk aşama

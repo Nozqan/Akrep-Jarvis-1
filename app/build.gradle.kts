@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.nebiozkan.akrepjarvis"
+    namespace = "com.akrep.jarvis.ai"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.nebiozkan.akrepjarvis"
+        applicationId = "com.akrep.jarvis.ai"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
