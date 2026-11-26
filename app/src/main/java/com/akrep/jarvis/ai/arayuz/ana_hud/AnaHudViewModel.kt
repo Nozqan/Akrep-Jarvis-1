@@ -81,14 +81,23 @@ class AnaHudViewModel(application: Application) : AndroidViewModel(application) 
 
     fun durumAyarla(yeniDurum: HudDurumu) {
         hudDurumu = yeniDurum
+        sistemDurumu = sistemDurumu.copy(
+            mikrofon = if (yeniDurum == HudDurumu.DINLIYOR) "Dinleme aktif" else "Dinleme kapalı",
+            yapayZeka = if (yeniDurum == HudDurumu.DUSUNUYOR) "Yanıt hazırlanıyor" else "Yerel motor hazır",
+        )
     }
 
     fun hataAyarla(metin: String) {
         hataMesaji = metin
         hudDurumu = HudDurumu.HATA
+        sistemDurumu = sistemDurumu.copy(mikrofon = "Dinleme kapalı")
     }
 
     fun eylemiTuket() {
         eylem = null
+    }
+
+    fun kameraDurumAyarla(acik: Boolean) {
+        sistemDurumu = sistemDurumu.copy(kamera = if (acik) "Kamera aktif" else "Kamera kapalı")
     }
 }

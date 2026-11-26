@@ -12,6 +12,7 @@ class KonusmaTaniyici(
     context: Context,
     private val onSonuc: (String) -> Unit,
     private val onHata: (String) -> Unit,
+    private val onGenlik: (Float) -> Unit = {},
 ) {
     private val recognizer = if (SpeechRecognizer.isRecognitionAvailable(context)) {
         SpeechRecognizer.createSpeechRecognizer(context)
@@ -36,7 +37,10 @@ class KonusmaTaniyici(
             object : RecognitionListener {
                 override fun onReadyForSpeech(params: Bundle?) = Unit
                 override fun onBeginningOfSpeech() = Unit
-                override fun onRmsChanged(rmsdB: Float) = Unit
+                override fun onRmsChanged(rmsdB: Float) {
+                    val normal = ((rmsdB + 12f) / 12f).coerceIn(0f, 1f)
+                    onGenlik(normal)
+                }
                 override fun onBufferReceived(buffer: ByteArray?) = Unit
                 override fun onEndOfSpeech() = Unit
                 override fun onError(error: Int) {

@@ -29,14 +29,14 @@ class YerelKomutMotoru(
                 val acildi = fenerAyarla(true)
                 YerelKomutSonucu(
                     if (acildi) "Fener açıldı." else "Bu cihazdan fener açılamadı.",
-                    acildi,
+                    true,
                 )
             }
             komut.contains("fener") && (komut.contains("kapat") || komut.contains("sondur")) -> {
                 val kapandi = fenerAyarla(false)
                 YerelKomutSonucu(
                     if (kapandi) "Fener kapatıldı." else "Bu cihazdan fener kapatılamadı.",
-                    kapandi,
+                    true,
                 )
             }
             komut.contains("batarya") || komut.contains("pil") -> YerelKomutSonucu(
@@ -63,10 +63,12 @@ class YerelKomutMotoru(
                 )
             }
             komut.contains("not olustur") || komut.contains("not tut") -> {
-                val icerik = metin
-                    .substringAfter("not olustur", "")
-                    .substringAfter("not tut", "")
-                    .trim()
+                val icerik = Regex("(?i).*(?:not olustur|not tut)[,:]?\\s*(.*)")
+                    .find(metin)
+                    ?.groupValues
+                    ?.getOrNull(1)
+                    ?.trim()
+                    .orEmpty()
                     .ifBlank { "Sesli veya metinle doldurulmamış not" }
                 notYoneticisi.ekle(icerik)
                 YerelKomutSonucu("Not oluşturuldu: $icerik", true)
@@ -84,6 +86,12 @@ class YerelKomutMotoru(
             komut.contains("ayar") -> {
                 context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 YerelKomutSonucu("Ayarlar açıldı.", true, "ayarlar")
+            }
+            komut.contains("gorev") || komut.contains("not merkezi") -> {
+                YerelKomutSonucu("Görev merkezi açılıyor.", true, "gorevler")
+            }
+            komut.contains("gizlilik") -> {
+                YerelKomutSonucu("Gizlilik merkezi açılıyor.", true, "gizlilik")
             }
             else -> YerelKomutSonucu(
                 "Bu komutu çevrimdışı yerel motorla anlayamadım.",

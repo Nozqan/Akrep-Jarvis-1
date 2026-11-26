@@ -180,25 +180,23 @@ fun KameraEkrani(onKapat: () -> Unit) {
                         fontSize = 12.sp,
                         maxLines = 3,
                     )
-                    if (ocrMetni.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        AkrepButon(
-                            onClick = {
-                                arananDosya = TaramaArsivi(context)
-                                    .kaydet(ocrMetni, nesneMetni)
-                                    .fold(onSuccess = { it.name }, onFailure = { "Arşivlenemedi" })
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            vurgu = EnerjiYesil,
-                        ) { Text("Sonucu Arşivle") }
-                        if (arananDosya.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = arananDosya,
-                                color = Color(0xFFA9B3C7),
-                                fontSize = 11.sp,
-                            )
-                        }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    AkrepButon(
+                        onClick = {
+                            arananDosya = TaramaArsivi(context)
+                                .kaydet(ocrMetni, nesneMetni)
+                                .fold(onSuccess = { it.name }, onFailure = { "Arşivlenemedi" })
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        vurgu = EnerjiYesil,
+                    ) { Text("Sonucu Arşivle") }
+                    if (arananDosya.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = arananDosya,
+                            color = Color(0xFFA9B3C7),
+                            fontSize = 11.sp,
+                        )
                     }
                 }
             }

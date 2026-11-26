@@ -21,7 +21,16 @@ class GeminiSaglayici(
 
     override suspend fun baglantiKontrolu(): BaglantiDurumu = withContext(Dispatchers.IO) {
         if (anahtar.isNullOrBlank()) BaglantiDurumu.Hata("API anahtarı tanımlı değil.")
-        else BaglantiDurumu.Bagli
+        else runCatching {
+            val istek = Request.Builder()
+                .url("https://generativelanguage.googleapis.com/v1beta/models?key=$anahtar")
+                .get()
+                .build()
+            istemci.newCall(istek).execute().use { yanit ->
+                if (yanit.isSuccessful) BaglantiDurumu.Bagli
+                else BaglantiDurumu.Hata("Bağlantı testi başarısız: HTTP ${yanit.code}")
+            }
+        }.getOrElse { BaglantiDurumu.Hata("Gemini API sunucusuna bağlanılamadı.") }
     }
 
     override suspend fun yanitOlustur(istek: YapayZekaIstegi): Result<YapayZekaYaniti> =

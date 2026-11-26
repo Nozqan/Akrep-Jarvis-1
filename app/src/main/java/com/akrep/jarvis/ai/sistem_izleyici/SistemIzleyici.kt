@@ -29,6 +29,7 @@ class SistemIzleyici(private val context: Context) {
         depolama = depolamaDurumu(),
         bellek = bellekDurumu(),
         ag = agDurumu(),
+        agHizi = agHizi(),
     )
 
     private fun bataryaDurumu(): String {
@@ -89,5 +90,14 @@ class SistemIzleyici(private val context: Context) {
             ozellikler.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet bağlı"
             else -> "Bağlantı türü kullanılamıyor"
         }
+    }
+
+    private fun agHizi(): String {
+        val yonetici = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return "Kullanılamıyor"
+        val ag = yonetici.activeNetwork ?: return "Çevrimdışı"
+        val ozellikler = yonetici.getNetworkCapabilities(ag) ?: return "Kullanılamıyor"
+        val hızı = ozellikler.linkDownstreamBandwidthKbps
+        return if (hızı > 0) "~$hızı kb/sn" else "Kullanılamıyor"
     }
 }

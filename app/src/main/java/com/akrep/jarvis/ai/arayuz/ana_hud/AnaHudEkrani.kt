@@ -59,6 +59,8 @@ import com.akrep.jarvis.ai.arayuz.gunes_hud.HudDurumu
 import com.akrep.jarvis.ai.sesli_asistan.ses_motoru.KonusmaTaniyici
 import com.akrep.jarvis.ai.sesli_asistan.ses_motoru.TurkceMetinSeslendirici
 import com.akrep.jarvis.ai.sesli_asistan.ses_motoru.UyandiriciKelimeMotoru
+import com.akrep.jarvis.ai.araclar.yardimci.PermisyonYardimcisi
+import com.akrep.jarvis.ai.sistem_izleyici.SistemDurumuKartlari
 
 @Composable
 fun AnaHudEkrani(
@@ -95,15 +97,19 @@ fun AnaHudEkrani(
                 else viewModel.sesSonucu(temiz)
             },
             onHata = viewModel::hataAyarla,
+            onGenlik = { sesGenligi = it },
         )
     }
     val tts = remember { TurkceMetinSeslendirici(context) }
+    var sesGenligi by remember { androidx.compose.runtime.mutableStateOf(0f) }
     tts.yayinSonaErdi = { viewModel.durumAyarla(HudDurumu.HAZIR) }
 
     LaunchedEffect(viewModel.cevap, ayarlar.sesliYanıt) {
         if (viewModel.cevap.isNotBlank() && ayarlar.sesliYanıt) {
             viewModel.durumAyarla(HudDurumu.KONUSUYOR)
             tts.konuş(viewModel.cevap)
+        } else if (!ayarlar.sesliYanıt) {
+            tts.durdur()
         }
     }
 
@@ -111,11 +117,20 @@ fun AnaHudEkrani(
         when (viewModel.eylem) {
             "kamera" -> {
                 viewModel.eylemiTuket()
+                viewModel.kameraDurumAyarla(true)
                 onKameraAc()
             }
             "ayarlar" -> {
                 viewModel.eylemiTuket()
                 onAyarlarAc()
+            }
+            "gorevler" -> {
+                viewModel.eylemiTuket()
+                onGorevlerAc()
+            }
+            "gizlilik" -> {
+                viewModel.eylemiTuket()
+                onGizlilikAc()
             }
         }
     }
@@ -196,6 +211,7 @@ fun AnaHudEkrani(
                     GunesHud(
                         durum = viewModel.hudDurumu,
                         hareketAzaltma = ayarlar.hareketAzaltma,
+                        genlik = sesGenligi,
                         modifier = Modifier.fillMaxWidth(0.86f),
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -231,7 +247,10 @@ fun AnaHudEkrani(
                     vurgu = EnerjiYesil,
                 ) { Text("Dinle") }
                 AkrepButon(
-                    onClick = onKameraAc,
+                    onClick = {
+                        viewModel.kameraDurumAyarla(true)
+                        onKameraAc()
+                    },
                     modifier = Modifier.weight(1f),
                     vurgu = GunesSari,
                 ) { Text("Canlı Görüş") }
@@ -270,6 +289,24 @@ fun AnaHudEkrani(
                 modifier = Modifier.fillMaxWidth(),
                 vurgu = Color(0xFFA9B3C7),
             ) { Text("Gizlilik") }
+
+            SistemDurumuKartlari(viewModel.sistemDurumu)
+
+            if (!mikrofonIzni) {
+                KristalPanel(vurgu = Color(0xFFFF5E6C)) {
+                    Text(
+                        text = "Mikrofon izni verilmedi",
+                        color = Color(0xFFFF5E6C),
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AkrepButon(
+                        onClick = { PermisyonYardimcisi.uygulamaAyarlariAc(context) },
+                        modifier = Modifier.fillMaxWidth(),
+                        vurgu = Color(0xFFFFB547),
+                    ) { Text("İzin Ayarlarına Git") }
+                }
+            }
         }
     }
 }

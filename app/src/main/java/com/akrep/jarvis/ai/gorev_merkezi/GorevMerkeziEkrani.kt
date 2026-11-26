@@ -209,6 +209,26 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         vurgu = BilgiMavi,
                     ) { Text("Bildirim İzni") }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AkrepButon(
+                        onClick = {
+                            hatirlatici.bildirimAyarlariAc()
+                            durumMesaji.value = "Bildirim ayarları açıldı."
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        vurgu = GunesSari,
+                    ) { Text("Bildirim Ayarlarını Aç") }
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AkrepButon(
+                            onClick = {
+                                hatirlatici.kesinAlarmIzniAc()
+                                durumMesaji.value = "Kesin alarm izni ayarları açıldı."
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            vurgu = GunesSari,
+                        ) { Text("Kesin Alarm İzni") }
+                    }
                 }
             }
 
