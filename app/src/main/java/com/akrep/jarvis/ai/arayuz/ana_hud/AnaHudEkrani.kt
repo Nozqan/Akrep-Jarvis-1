@@ -87,6 +87,7 @@ fun AnaHudEkrani(
         if (verildi) viewModel.durumAyarla(HudDurumu.DINLIYOR)
         else viewModel.hataAyarla("Mikrofon izni verilmedi. Ayarlardan veya sistem izninden etkinleştirin.")
     }
+    var sesGenligi by remember { androidx.compose.runtime.mutableStateOf(0f) }
 
     val taniyici = remember {
         KonusmaTaniyici(
@@ -101,7 +102,6 @@ fun AnaHudEkrani(
         )
     }
     val tts = remember { TurkceMetinSeslendirici(context) }
-    var sesGenligi by remember { androidx.compose.runtime.mutableStateOf(0f) }
     tts.yayinSonaErdi = { viewModel.durumAyarla(HudDurumu.HAZIR) }
 
     LaunchedEffect(viewModel.cevap, ayarlar.sesliYanıt) {
