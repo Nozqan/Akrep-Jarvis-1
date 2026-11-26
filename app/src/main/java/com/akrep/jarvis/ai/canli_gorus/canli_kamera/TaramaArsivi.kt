@@ -7,13 +7,14 @@ import java.util.Date
 import java.util.Locale
 
 class TaramaArsivi(private val context: Context) {
-    fun kaydet(metin: String): Result<File> = runCatching {
+    fun kaydet(metin: String, nesneSonucu: String = ""): Result<File> = runCatching {
         val tarih = SimpleDateFormat("yyyyMMdd_HHmmss", Locale("tr", "TR")).format(Date())
         val dosya = File(context.filesDir, "tarama_$tarih.txt")
         dosya.writeText(
             "AKREP JARVIS tarama sonucu\n" +
                 "Tarih: ${SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale("tr", "TR")).format(Date())}\n\n" +
-                metin,
+                "Metin:\n${metin.ifBlank { "Metin algılanmadı." }}\n\n" +
+                "Ortam analizi:\n${nesneSonucu.ifBlank { "Nesne algılanmadı." }}",
         )
         dosya
     }

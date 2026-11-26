@@ -65,6 +65,10 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.util.concurrent.Executors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicLong
 
 enum class KameraDurumu(val etiket: String) {
     KAPALI("Kamera kapalı"),
@@ -87,6 +91,7 @@ fun KameraEkrani(onKapat: () -> Unit) {
     }
     var durum by remember { mutableStateOf(KameraDurumu.KAPALI) }
     var ocrMetni by remember { mutableStateOf("") }
+    var nesneMetni by remember { mutableStateOf("Nesneler analiz ediliyor.") }
     var arananDosya by remember { mutableStateOf("") }
 
     val izinLauncher = rememberLauncherForActivityResult(
@@ -116,6 +121,9 @@ fun KameraEkrani(onKapat: () -> Unit) {
                 onMetin = {
                     ocrMetni = it
                     if (it.isNotBlank()) durum = KameraDurumu.SONUC_HAZIR
+                },
+                onNesne = { nesneler ->
+                    nesneMetni = OrtamAnalizcisi().analizEt(nesneler)
                 },
             )
 
@@ -165,11 +173,19 @@ fun KameraEkrani(onKapat: () -> Unit) {
                         fontSize = 13.sp,
                         maxLines = 5,
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = nesneMetni,
+                        color = BilgiMavi,
+                        fontSize = 12.sp,
+                        maxLines = 3,
+                    )
                     if (ocrMetni.isNotBlank()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         AkrepButon(
                             onClick = {
-                                arananDosya = TaramaArsivi(context).kaydet(ocrMetni)
+                                arananDosya = TaramaArsivi(context)
+                                    .kaydet(ocrMetni, nesneMetni)
                                     .fold(onSuccess = { it.name }, onFailure = { "Arşivlenemedi" })
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -234,17 +250,22 @@ private fun CanliOnizleme(
     modifier: Modifier,
     onDurum: (KameraDurumu) -> Unit,
     onMetin: (String) -> Unit,
+    onNesne: (List<String>) -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
     val metinTarayici = remember { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
+    val nesneAnalizcisi = remember { NesneAnalizcisi() }
+    val analizKapsami = remember { CoroutineScope(Dispatchers.Default) }
+    val sonIslemZamani = remember { AtomicLong(0L) }
     var aktif by remember { mutableStateOf(true) }
 
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
             aktif = false
             metinTarayici.close()
+            nesneAnalizcisi.serbestBirak()
             executor.shutdown()
         }
     }
@@ -284,10 +305,28 @@ private fun CanliOnizleme(
                                 goruntuRef,
                                 goruntu.imageInfo.rotationDegrees,
                             )
+                            val simdi = System.currentTimeMillis()
+                            val son = sonIslemZamani.get()
+                            val nesneAnaliziZamaniGeldi =
+                                simdi - son >= 900L &&
+                                sonIslemZamani.compareAndSet(son, simdi)
+
                             metinTarayici.process(input)
                                 .addOnSuccessListener { sonuc -> onMetin(sonuc.text) }
                                 .addOnFailureListener { onDurum(KameraDurumu.BASARISIZ) }
                                 .addOnCompleteListener { goruntu.close() }
+
+                            if (nesneAnaliziZamaniGeldi) {
+                                onDurum(KameraDurumu.NESNE_ANALIZ)
+                                analizKapsami.launch {
+                                    val nesneler = nesneAnalizcisi.analizEt(input)
+                                    onNesne(nesneler)
+                                    onDurum(
+                                        if (nesneler.isEmpty()) KameraDurumu.SONUC_HAZIR
+                                        else KameraDurumu.NESNE_ANALIZ,
+                                    )
+                                }
+                            }
                         }
                         provider.unbindAll()
                         provider.bindToLifecycle(
