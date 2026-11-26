@@ -63,7 +63,7 @@ class KonusmaTaniyici(
                 override fun onEvent(eventType: Int, params: Bundle?) = Unit
             },
         )
-        runCatching { recognizer.startListening(intent) }
+        runCatching { recognizer?.startListening(intent) }
             .onFailure { onHata("Dinleme başlatılamadı. Tekrar deneyin.") }
     }
 
