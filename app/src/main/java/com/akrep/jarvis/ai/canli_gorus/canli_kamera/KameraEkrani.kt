@@ -1,8 +1,8 @@
 package com.akrep.jarvis.ai.canli_gorus.canli_kamera
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,15 +29,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,40 +39,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.akrep.jarvis.ai.araclar.bilesenler.OvalCamPanel
+import com.akrep.jarvis.ai.araclar.bilesenler.AkrepButon
+import com.akrep.jarvis.ai.araclar.bilesenler.KristalPanel
 import com.akrep.jarvis.ai.araclar.tema.Altin
 import com.akrep.jarvis.ai.araclar.tema.BilgiMavi
-import com.akrep.jarvis.ai.araclar.tema.Hata
+import com.akrep.jarvis.ai.araclar.tema.EnerjiYesil
+import com.akrep.jarvis.ai.araclar.tema.GunesSari
 import com.akrep.jarvis.ai.araclar.tema.UzaySiyahi
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.concurrent.Executors
 import com.google.mlkit.vision.common.InputImage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import java.util.concurrent.Executors
 
 enum class KameraDurumu(val etiket: String) {
     KAPALI("Kamera kapalı"),
     IZIN_BEKLENIyor("İzin bekleniyor"),
     HAZIRLANIyor("Tarama hazırlanıyor"),
     METIN_ANALIZ("Metin analiz ediliyor"),
-    NESNE_ANALIZ("Nesne tanıma için destek kontrolü"),
+    NESNE_ANALIZ("Nesne analizi"),
     SONUC_HAZIR("Sonuç hazır"),
     BASARISIZ("İşlem başarısız"),
 }
@@ -89,16 +82,11 @@ fun KameraEkrani(onKapat: () -> Unit) {
     var izinVerildi by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED,
+                PackageManager.PERMISSION_GRANTED,
         )
     }
-    val izinReddetti by remember { mutableStateOf(false) }
     var durum by remember { mutableStateOf(KameraDurumu.KAPALI) }
-    var ocrSonucu by remember { mutableStateOf("") }
-    var nesneSonucu by remember { mutableStateOf("") }
-    val ortamAnalizcisi = remember { OrtamAnalizcisi() }
-    val elJestAlgilayici = remember { ElJestAlgilayici() }
-    val taramaArsivi = remember { TaramaArsivi(context) }
+    var ocrMetni by remember { mutableStateOf("") }
     var arananDosya by remember { mutableStateOf("") }
 
     val izinLauncher = rememberLauncherForActivityResult(
@@ -108,35 +96,35 @@ fun KameraEkrani(onKapat: () -> Unit) {
         durum = if (verildi) KameraDurumu.HAZIRLANIyor else KameraDurumu.IZIN_BEKLENIyor
     }
 
-    LaunchedEffect(izinVerildi) {
+    LaunchedEffect(Unit) {
         if (!izinVerildi) {
             durum = KameraDurumu.IZIN_BEKLENIyor
             izinLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(UzaySiyahi)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(UzaySiyahi)
+            .statusBarsPadding(),
+    ) {
         if (izinVerildi) {
-            KameraOnizleme(
+            CanliOnizleme(
                 modifier = Modifier.fillMaxSize(),
                 onDurum = { durum = it },
-                onOcrSonuc = { metin ->
-                    ocrSonucu = metin
-                    if (metin.isNotBlank()) {
-                        durum = KameraDurumu.SONUC_HAZIR
-                    }
-                },
-                onNesneSonuc = { nesneler ->
-                    nesneSonucu = ortamAnalizcisi.analizEt(nesneler)
+                onMetin = {
+                    ocrMetni = it
+                    if (it.isNotBlank()) durum = KameraDurumu.SONUC_HAZIR
                 },
             )
 
-            TaramaKatmani(durum = durum)
+            PremiumTaramaKatmani(durum)
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(
@@ -144,59 +132,53 @@ fun KameraEkrani(onKapat: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(onClick = onKapat) { Text("Kapat") }
-                    Text(
-                        text = durum.etiket,
-                        color = if (durum == KameraDurumu.BASARISIZ) Hata else BilgiMavi,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    AkrepButon(
+                        onClick = onKapat,
+                        modifier = Modifier.weight(0.42f),
+                        vurgu = Color(0xFFA9B3C7),
+                    ) { Text("Kapat") }
+
+                    KristalPanel(modifier = Modifier.weight(0.58f), vurgu = BilgiMavi) {
+                        Text(
+                            text = durum.etiket.uppercase(),
+                            color = if (durum == KameraDurumu.BASARISIZ) Color(0xFFFF5E6C) else BilgiMavi,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
 
-                OvalCamPanel(
-                    modifier = Modifier.padding(bottom = 18.dp),
-                ) {
+                KristalPanel(vurgu = GunesSari) {
                     Text(
-                        text = "Tarama sonucu",
-                        color = Altin,
+                        text = "CANLI GÖRÜŞ",
+                        color = GunesSari,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp,
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = ocrSonucu.ifBlank { "Metin bekleniyor." },
+                        text = ocrMetni.ifBlank { "Çevre taranıyor. Metin ve nesneler algılanıyor." },
                         color = Color(0xFFF7F8FC),
                         fontSize = 13.sp,
-                        maxLines = 6,
+                        maxLines = 5,
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Nesneler: $nesneSonucu",
-                        color = BilgiMavi,
-                        fontSize = 12.sp,
-                        maxLines = 3,
-                    )
-                    Text(
-                        text = elJestAlgilayici.destekDurumu(),
-                        color = Color(0xFFA9B3C7),
-                        fontSize = 11.sp,
-                        maxLines = 3,
-                    )
-                    if (ocrSonucu.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
+                    if (ocrMetni.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        AkrepButon(
                             onClick = {
-                                arananDosya = taramaArsivi.kaydet(ocrSonucu)
-                                    .fold(
-                                        onSuccess = { it.name },
-                                        onFailure = { "Arşivlenemedi" },
-                                    )
+                                arananDosya = TaramaArsivi(context).kaydet(ocrMetni)
+                                    .fold(onSuccess = { it.name }, onFailure = { "Arşivlenemedi" })
                             },
-                            shape = RoundedCornerShape(22.dp),
-                        ) {
-                            Text("Sonucu arşivle")
-                        }
+                            modifier = Modifier.fillMaxWidth(),
+                            vurgu = EnerjiYesil,
+                        ) { Text("Sonucu Arşivle") }
                         if (arananDosya.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Arşiv: $arananDosya",
+                                text = arananDosya,
                                 color = Color(0xFFA9B3C7),
                                 fontSize = 11.sp,
                             )
@@ -206,42 +188,41 @@ fun KameraEkrani(onKapat: () -> Unit) {
             }
         } else {
             Column(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
-                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
-                OvalCamPanel {
+                KristalPanel(vurgu = Altin) {
                     Text(
-                        text = "Kamera izni gerekli",
+                        text = "Kamera İzni Gerekli",
                         color = Altin,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Canlı tarama, metin okuma ve OCR işlemleri için kamera kullanılmalı.",
+                        text = "Canlı görüş ve OCR tarama için kamera erişimi gereklidir.",
                         color = Color(0xFFA9B3C7),
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
+                    Spacer(modifier = Modifier.height(14.dp))
+                    AkrepButon(
                         onClick = {
                             val intent = Intent(
                                 Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                 Uri.parse("package:${context.packageName}"),
-                            )
+                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             context.startActivity(intent)
                         },
-                        shape = RoundedCornerShape(22.dp),
-                    ) {
-                        Text("Uygulama ayarlarına git")
-                    }
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Sistem Ayarlarına Git") }
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(
+                    AkrepButon(
                         onClick = onKapat,
-                        shape = RoundedCornerShape(22.dp),
-                    ) {
-                        Text("Geri dön")
-                    }
+                        modifier = Modifier.fillMaxWidth(),
+                        vurgu = Color(0xFFA9B3C7),
+                    ) { Text("Geri Dön") }
                 }
             }
         }
@@ -249,26 +230,22 @@ fun KameraEkrani(onKapat: () -> Unit) {
 }
 
 @Composable
-private fun KameraOnizleme(
+private fun CanliOnizleme(
     modifier: Modifier,
     onDurum: (KameraDurumu) -> Unit,
-    onOcrSonuc: (String) -> Unit,
-    onNesneSonuc: (List<String>) -> Unit,
+    onMetin: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val yuzIslemci = remember { Executors.newSingleThreadExecutor() }
-    val taniyici = remember { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
-    val nesneAnalizcisi = remember { NesneAnalizcisi() }
-    val analizKapsami = remember { CoroutineScope(Dispatchers.Default) }
-    var analizAktif by remember { mutableStateOf(true) }
+    val executor = remember { Executors.newSingleThreadExecutor() }
+    val metinTarayici = remember { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
+    var aktif by remember { mutableStateOf(true) }
 
-    DisposableEffect(Unit) {
+    androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
-            analizAktif = false
-            taniyici.close()
-            nesneAnalizcisi.serbestBirak()
-            yuzIslemci.shutdown()
+            aktif = false
+            metinTarayici.close()
+            executor.shutdown()
         }
     }
 
@@ -281,47 +258,36 @@ private fun KameraOnizleme(
             }
         },
         update = { previewView ->
-            val providerGelecegi = ProcessCameraProvider.getInstance(context)
-            providerGelecegi.addListener(
+            val providerFuture = ProcessCameraProvider.getInstance(context)
+            providerFuture.addListener(
                 {
                     runCatching {
-                        val provider = providerGelecegi.get()
+                        val provider = providerFuture.get()
                         val preview = Preview.Builder().build().apply {
                             setSurfaceProvider(previewView.surfaceProvider)
                         }
                         val analiz = ImageAnalysis.Builder()
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                             .build()
-                        analiz.setAnalyzer(yuzIslemci) { goruntu ->
-                            if (!analizAktif) {
+                        analiz.setAnalyzer(executor) { goruntu ->
+                            if (!aktif) {
                                 goruntu.close()
                                 return@setAnalyzer
                             }
-                            val medyaGoruntu = goruntu.image
-                            if (medyaGoruntu == null) {
+                            val goruntuRef = goruntu.image
+                            if (goruntuRef == null) {
                                 goruntu.close()
                                 return@setAnalyzer
                             }
                             onDurum(KameraDurumu.METIN_ANALIZ)
-                            val giris = InputImage.fromMediaImage(
-                                medyaGoruntu,
+                            val input = InputImage.fromMediaImage(
+                                goruntuRef,
                                 goruntu.imageInfo.rotationDegrees,
                             )
-                            analizKapsami.launch {
-                                val nesneler = nesneAnalizcisi.analizEt(giris)
-                                onNesneSonuc(nesneler)
-                            }
-                            taniyici.process(giris)
-                                .addOnSuccessListener { sonuc ->
-                                    onOcrSonuc(sonuc.text)
-                                }
-                                .addOnFailureListener {
-                                    onDurum(KameraDurumu.BASARISIZ)
-                                }
-                                .addOnCompleteListener {
-                                    goruntu.close()
-                                }
+                            metinTarayici.process(input)
+                                .addOnSuccessListener { sonuc -> onMetin(sonuc.text) }
+                                .addOnFailureListener { onDurum(KameraDurumu.BASARISIZ) }
+                                .addOnCompleteListener { goruntu.close() }
                         }
                         provider.unbindAll()
                         provider.bindToLifecycle(
@@ -331,9 +297,7 @@ private fun KameraOnizleme(
                             analiz,
                         )
                         onDurum(KameraDurumu.SONUC_HAZIR)
-                    }.onFailure {
-                        onDurum(KameraDurumu.BASARISIZ)
-                    }
+                    }.onFailure { onDurum(KameraDurumu.BASARISIZ) }
                 },
                 ContextCompat.getMainExecutor(context),
             )
@@ -342,65 +306,63 @@ private fun KameraOnizleme(
 }
 
 @Composable
-private fun TaramaKatmani(durum: KameraDurumu) {
-    val sonsuz = rememberInfiniteTransition(label = "tarama")
-    val y by sonsuz.animateFloat(
+private fun PremiumTaramaKatmani(durum: KameraDurumu) {
+    val sonsuz = rememberInfiniteTransition(label = "premium_tarama")
+    val ilerleme by sonsuz.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             tween(2200, easing = LinearEasing),
             RepeatMode.Reverse,
         ),
-        label = "tarama_cizgisi",
+        label = "tarama_ilerleme",
     )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val sol = size.width * 0.12f
-        val ust = size.height * 0.18f
         val sag = size.width * 0.88f
-        val alt = size.height * 0.68f
-        val koyuGrid = Color(0xFF67C7FF).copy(alpha = 0.14f)
-        for (i in 1 until 8) {
-            val x = sol + (sag - sol) * i / 8f
-            drawLine(koyuGrid, Offset(x, ust), Offset(x, alt), 1.dp.toPx())
+        val ust = size.height * 0.16f
+        val alt = size.height * 0.66f
+
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color.Transparent, Color(0xFF67C7FF).copy(alpha = 0.05f), Color.Transparent),
+            ),
+        )
+
+        val gridRenk = BilgiMavi.copy(alpha = 0.14f)
+        for (i in 1..8) {
+            val x = sol + (sag - sol) * i / 9f
+            drawLine(gridRenk, Offset(x, ust), Offset(x, alt), 1.dp.toPx())
         }
-        for (i in 1 until 8) {
-            val yGrid = ust + (alt - ust) * i / 8f
-            drawLine(koyuGrid, Offset(sol, yGrid), Offset(sag, yGrid), 1.dp.toPx())
+        for (i in 1..6) {
+            val y = ust + (alt - ust) * i / 7f
+            drawLine(gridRenk, Offset(sol, y), Offset(sag, y), 1.dp.toPx())
         }
 
-        val cap = 44.dp.toPx()
-        listOf(
+        val y = ust + (alt - ust) * ilerleme
+        val taramaRenk = if (durum == KameraDurumu.BASARISIZ) Color(0xFFFF5E6C) else EnerjiYesil
+        drawLine(taramaRenk, Offset(sol, y), Offset(sag, y), 2.dp.toPx())
+
+        val koseler = listOf(
             Offset(sol, ust),
             Offset(sag, ust),
             Offset(sol, alt),
             Offset(sag, alt),
-        ).forEachIndexed { indeks, nokta ->
-            val yonX = if (indeks % 2 == 0) 1f else -1f
-            val yonY = if (indeks < 2) 1f else -1f
-            drawLine(
-                Altin,
-                nokta,
-                Offset(nokta.x + yonX * cap, nokta.y),
-                3.dp.toPx(),
-                StrokeCap.Round,
-            )
-            drawLine(
-                Altin,
-                nokta,
-                Offset(nokta.x, nokta.y + yonY * cap),
-                3.dp.toPx(),
-                StrokeCap.Round,
-            )
+        )
+        koseler.forEachIndexed { indeks, nokta ->
+            val xYon = if (indeks % 2 == 0) 1f else -1f
+            val yYon = if (indeks < 2) 1f else -1f
+            drawLine(Altin, nokta, Offset(nokta.x + xYon * 48.dp.toPx(), nokta.y), 3.dp.toPx())
+            drawLine(Altin, nokta, Offset(nokta.x, nokta.y + yYon * 48.dp.toPx()), 3.dp.toPx())
         }
 
-        val taramaY = ust + (alt - ust) * y
-        drawLine(
-            if (durum == KameraDurumu.BASARISIZ) Hata else BilgiMavi,
-            Offset(sol, taramaY),
-            Offset(sag, taramaY),
-            2.dp.toPx(),
-            StrokeCap.Round,
+        val hedef = Offset(size.width / 2f, size.height * 0.46f)
+        drawCircle(
+            color = GunesSari.copy(alpha = 0.72f),
+            radius = 28.dp.toPx(),
+            center = hedef,
+            style = Stroke(width = 2.dp.toPx()),
         )
     }
 }

@@ -8,6 +8,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -36,6 +40,30 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = AkrepNavigasyon.HUD,
+                        enterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Start,
+                                animationSpec = tween(420),
+                            ) + fadeIn(tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Start,
+                                animationSpec = tween(420),
+                            ) + fadeOut(tween(260))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.End,
+                                animationSpec = tween(420),
+                            ) + fadeIn(tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.End,
+                                animationSpec = tween(420),
+                            ) + fadeOut(tween(260))
+                        },
                     ) {
                         composable(AkrepNavigasyon.HUD) {
                             AnaHudEkrani(

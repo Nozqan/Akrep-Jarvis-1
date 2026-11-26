@@ -1,6 +1,8 @@
 package com.akrep.jarvis.ai.ayarlar
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,13 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,14 +28,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.akrep.jarvis.ai.araclar.bilesenler.OvalCamPanel
+import com.akrep.jarvis.ai.araclar.bilesenler.AkrepButon
+import com.akrep.jarvis.ai.araclar.bilesenler.KristalPanel
 import com.akrep.jarvis.ai.araclar.tema.Altin
+import com.akrep.jarvis.ai.araclar.tema.BilgiMavi
+import com.akrep.jarvis.ai.araclar.tema.EnerjiYesil
+import com.akrep.jarvis.ai.araclar.tema.GunesSari
+import com.akrep.jarvis.ai.araclar.tema.UzaySiyahi
 import com.akrep.jarvis.ai.yapay_zeka.BaglantiDurumu
 import com.akrep.jarvis.ai.yapay_zeka.KomutYonlendirici
 import kotlinx.coroutines.launch
@@ -49,131 +58,159 @@ fun AyarlarEkrani(onGeri: () -> Unit) {
     }
     var baglantiMesaji by remember { mutableStateOf("") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .statusBarsPadding()
+            .background(Brush.verticalGradient(listOf(Color(0xFF101B33), UzaySiyahi))),
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            OutlinedButton(onClick = onGeri, shape = RoundedCornerShape(22.dp)) { Text("Geri") }
-            Text("Ayarlar", color = Altin, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-        }
-
-        OvalCamPanel {
-            Text("Yapay zekâ sağlayıcısı", color = Altin, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                listOf("Yerel", "OpenAI", "Gemini").forEach { ad ->
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            islemKapsami.launch { depo.saglayiciAyarla(ad) }
-                        },
-                        shape = RoundedCornerShape(22.dp),
-                    ) { Text(ad) }
+                AkrepButon(
+                    onClick = onGeri,
+                    modifier = Modifier.fillMaxWidth(0.28f),
+                    vurgu = Color(0xFFA9B3C7),
+                ) { Text("Geri") }
+                KristalPanel(modifier = Modifier.fillMaxWidth(0.68f), vurgu = Altin) {
+                    Text("SİSTEM AYARLARI", color = Altin, fontWeight = FontWeight.Bold)
                 }
             }
 
-            if (ayarlar.saglayici != "Yerel") {
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = apiAnahtari,
-                    onValueChange = { apiAnahtari = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("API anahtarı") },
-                    visualTransformation = PasswordVisualTransformation(),
-                )
-                OutlinedTextField(
-                    value = ayarlar.ucNokta,
-                    onValueChange = { islemKapsami.launch { depo.ucNoktaAyarla(it) } },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("API uç noktası") },
-                )
-                OutlinedTextField(
-                    value = ayarlar.model,
-                    onValueChange = { islemKapsami.launch { depo.modelAyarla(it) } },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Model") },
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            yonlendirici.apiAnahtariKaydet(ayarlar.saglayici, apiAnahtari)
-                            baglantiMesaji = "Anahtar güvenli depoya kaydedildi."
-                        },
-                        shape = RoundedCornerShape(22.dp),
-                    ) { Text("Kaydet") }
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            yonlendirici.apiAnahtariSil(ayarlar.saglayici)
-                            apiAnahtari = ""
-                            baglantiMesaji = "API anahtarı silindi."
-                        },
-                        shape = RoundedCornerShape(22.dp),
-                    ) { Text("Sil") }
+            KristalPanel(vurgu = GunesSari) {
+                Text("YAPAY ZEKÂ MOTORU", color = GunesSari, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Yerel", "OpenAI", "Gemini").forEach { ad ->
+                        AkrepButon(
+                            onClick = {
+                                islemKapsami.launch { depo.saglayiciAyarla(ad) }
+                            },
+                            modifier = Modifier.weight(1f),
+                            vurgu = if (ayarlar.saglayici == ad) GunesSari else Color(0xFFA9B3C7),
+                        ) { Text(ad) }
+                    }
                 }
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        islemKapsami.launch {
-                            baglantiMesaji = when (val durum = yonlendirici.baglantiKontrolu()) {
-                                BaglantiDurumu.Bagli -> "Bağlantı başarılı."
-                                BaglantiDurumu.BagliDegil -> "Bağlantı yok."
-                                is BaglantiDurumu.Hata -> durum.mesaj
+
+                if (ayarlar.saglayici != "Yerel") {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = apiAnahtari,
+                        onValueChange = { apiAnahtari = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        label = { Text("API anahtarı") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = GunesSari),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = ayarlar.ucNokta,
+                        onValueChange = { islemKapsami.launch { depo.ucNoktaAyarla(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        label = { Text("API uç noktası") },
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = ayarlar.model,
+                        onValueChange = { islemKapsami.launch { depo.modelAyarla(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        label = { Text("Model") },
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AkrepButon(
+                            onClick = {
+                                yonlendirici.apiAnahtariKaydet(ayarlar.saglayici, apiAnahtari)
+                                baglantiMesaji = "Anahtar şifreli depoya kaydedildi."
+                            },
+                            modifier = Modifier.weight(1f),
+                            vurgu = EnerjiYesil,
+                        ) { Text("Kaydet") }
+                        AkrepButon(
+                            onClick = {
+                                yonlendirici.apiAnahtariSil(ayarlar.saglayici)
+                                apiAnahtari = ""
+                                baglantiMesaji = "API anahtarı silindi."
+                            },
+                            modifier = Modifier.weight(1f),
+                            vurgu = Color(0xFFA9B3C7),
+                        ) { Text("Sil") }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AkrepButon(
+                        onClick = {
+                            islemKapsami.launch {
+                                baglantiMesaji = when (val durum = yonlendirici.baglantiKontrolu()) {
+                                    BaglantiDurumu.Bagli -> "Bağlantı başarılı."
+                                    BaglantiDurumu.BagliDegil -> "Bağlantı yok."
+                                    is BaglantiDurumu.Hata -> durum.mesaj
+                                }
                             }
-                        }
-                    },
-                    shape = RoundedCornerShape(22.dp),
-                ) { Text("Bağlantıyı test et") }
-                if (baglantiMesaji.isNotBlank()) {
-                    Text(baglantiMesaji, color = Color(0xFFA9B3C7), fontSize = 12.sp)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        vurgu = BilgiMavi,
+                    ) { Text("Bağlantıyı Test Et") }
+                    if (baglantiMesaji.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(baglantiMesaji, color = Color(0xFFA9B3C7), fontSize = 12.sp)
+                    }
                 }
             }
-        }
 
-        OvalCamPanel {
-            AyarSatiri(
-                metin = "Harici yapay zekâya veri gönder",
-                acik = ayarlar.hariciYapayZekaIzni,
-                onDegisim = { islemKapsami.launch { depo.hariciIzniAyarla(it) } },
-            )
-            AyarSatiri(
-                metin = "Sesli yanıt",
-                acik = ayarlar.sesliYanıt,
-                onDegisim = { islemKapsami.launch { depo.sesliYanitiAyarla(it) } },
-            )
-            AyarSatiri(
-                metin = "Tam giriş animasyonu",
-                acik = ayarlar.tamGirisAnimasyonu,
-                onDegisim = { islemKapsami.launch { depo.tamGirisAyarla(it) } },
-            )
-            AyarSatiri(
-                metin = "Hareket azaltma",
-                acik = ayarlar.hareketAzaltma,
-                onDegisim = { islemKapsami.launch { depo.hareketAzaltmaAyarla(it) } },
-            )
+            KristalPanel(vurgu = EnerjiYesil) {
+                Text("KULLANICI DENETİMLERİ", color = EnerjiYesil, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                AyarAnahtari("Harici yapay zekaya veri gönder", ayarlar.hariciYapayZekaIzni) {
+                    islemKapsami.launch { depo.hariciIzniAyarla(it) }
+                }
+                AyarAnahtari("Sesli yanıt", ayarlar.sesliYanıt) {
+                    islemKapsami.launch { depo.sesliYanitiAyarla(it) }
+                }
+                AyarAnahtari("Tam giriş animasyonu", ayarlar.tamGirisAnimasyonu) {
+                    islemKapsami.launch { depo.tamGirisAyarla(it) }
+                }
+                AyarAnahtari("Hareket azaltma", ayarlar.hareketAzaltma) {
+                    islemKapsami.launch { depo.hareketAzaltmaAyarla(it) }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun AyarSatiri(metin: String, acik: Boolean, onDegisim: (Boolean) -> Unit) {
+private fun AyarAnahtari(metin: String, acik: Boolean, onDegisim: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(metin, color = Color(0xFFF7F8FC), modifier = Modifier.weight(1f))
-        Switch(checked = acik, onCheckedChange = onDegisim)
+        Switch(
+            checked = acik,
+            onCheckedChange = onDegisim,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = UzaySiyahi,
+                checkedTrackColor = EnerjiYesil,
+                uncheckedThumbColor = Color(0xFFA9B3C7),
+                uncheckedTrackColor = CamRenk(),
+            ),
+        )
     }
 }
+
+@Composable
+private fun CamRenk(): Color = Color(0xFF172033)

@@ -1,5 +1,6 @@
 package com.akrep.jarvis.ai.arayuz.gunes_hud
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -9,12 +10,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -42,81 +45,122 @@ fun GunesHud(
     genlik: Float = 0f,
     hareketAzaltma: Boolean = false,
 ) {
-    val sonsuz = rememberInfiniteTransition(label = "gunes_hud")
+    val sonsuz = rememberInfiniteTransition(label = "solar_hud")
     val aci by sonsuz.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             tween(
-                durationMillis = if (hareketAzaltma) 6000 else when (durum) {
+                if (hareketAzaltma) 6500 else when (durum) {
                     HudDurumu.DINLIYOR -> 900
                     HudDurumu.DUSUNUYOR -> 1300
                     HudDurumu.KONUSUYOR -> 700
-                    HudDurumu.HATA -> 180
-                    else -> 2400
+                    HudDurumu.HATA -> 600
+                    else -> 3000
                 },
                 easing = LinearEasing,
             ),
             RepeatMode.Restart,
         ),
-        label = "hud_donme",
+        label = "halkalar",
     )
-    val nabiz = 1f + genlik.coerceIn(0f, 1f) * 0.10f
+    val nabiz by sonsuz.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            tween(if (hareketAzaltma) 3000 else 850, easing = FastOutSlowInEasing),
+            RepeatMode.Reverse,
+        ),
+        label = "cekirdek",
+    )
+
+    val vurgu = when (durum) {
+        HudDurumu.DINLIYOR -> EnerjiYesil
+        HudDurumu.DUSUNUYOR -> GunesSari
+        HudDurumu.KONUSUYOR -> EnerjiKirmizi
+        HudDurumu.HATA -> Color(0xFFFF5E6C)
+        HudDurumu.CEVRIMDISI -> BilgiMavi
+        HudDurumu.HAZIR -> Altin
+    }
 
     Box(
-        modifier = modifier.fillMaxWidth(0.78f).aspectRatio(1f),
+        modifier = modifier
+            .fillMaxWidth(0.92f)
+            .aspectRatio(1f),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(modifier = Modifier.matchParentSize()) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
             val merkez = Offset(size.width / 2f, size.height / 2f)
-            val cekirdek = size.minDimension * 0.22f * nabiz
-            val baskin = when (durum) {
-                HudDurumu.DINLIYOR -> EnerjiYesil
-                HudDurumu.DUSUNUYOR -> GunesSari
-                HudDurumu.KONUSUYOR -> EnerjiKirmizi
-                HudDurumu.HATA -> Color(0xFFFF5E6C)
-                HudDurumu.CEVRIMDISI -> BilgiMavi
-                HudDurumu.HAZIR -> Altin
-            }
+            val min = size.minDimension
 
             drawCircle(
+                color = vurgu.copy(alpha = 0.07f),
+                radius = min * 0.47f,
+                center = merkez,
+            )
+            drawCircle(
+                color = vurgu.copy(alpha = 0.22f),
+                radius = min * 0.47f,
+                center = merkez,
+                style = Stroke(width = 1.dp.toPx()),
+            )
+
+            listOf(
+                EnerjiYesil to 0f,
+                GunesSari to 110f,
+                EnerjiKirmizi to 220f,
+            ).forEachIndexed { indeks, (renk, kayma) ->
+                val yaricap = min * (0.34f + indeks * 0.045f)
+                drawOval(
+                    brush = Brush.sweepGradient(
+                        colors = listOf(
+                            renk.copy(alpha = 0.18f),
+                            renk,
+                            Color.Transparent,
+                            renk.copy(alpha = 0.55f),
+                            renk.copy(alpha = 0.18f),
+                        ),
+                        center = merkez,
+                    ),
+                    topLeft = Offset(merkez.x - yaricap, merkez.y - yaricap * 0.72f),
+                    size = Size(yaricap * 2f, yaricap * 1.44f),
+                    style = Stroke(width = (3.2f - indeks * 0.45f).dp.toPx()),
+                )
+
+                val aciParca = Math.toRadians((aci + kayma).toDouble())
+                val parcax = merkez.x + kotlin.math.cos(aciParca).toFloat() * yaricap
+                val parcay = merkez.y + kotlin.math.sin(aciParca).toFloat() * yaricap * 0.72f
+                if (!hareketAzaltma) {
+                    drawCircle(
+                        color = renk,
+                        radius = (4.5f - indeks * 0.7f).dp.toPx(),
+                        center = Offset(parcax, parcay),
+                    )
+                }
+            }
+
+            val cekirdekBuyume = if (durum == HudDurumu.DUSUNUYOR) nabiz else 1f + genlik.coerceIn(0f, 1f) * 0.12f
+            val cekirdek = min * 0.19f * cekirdekBuyume
+            drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color.White.copy(alpha = 0.9f), baskin, baskin.copy(alpha = 0.35f), UzaySiyahi),
-                    center = merkez,
-                    radius = cekirdek * 1.25f,
+                    colors = listOf(
+                        Color.White,
+                        GunesSari,
+                        vurgu,
+                        EnerjiKirmizi.copy(alpha = 0.55f),
+                        UzaySiyahi,
+                    ),
+                    center = Offset(merkez.x - cekirdek * 0.22f, merkez.y - cekirdek * 0.22f),
+                    radius = cekirdek * 1.45f,
                 ),
                 radius = cekirdek,
                 center = merkez,
             )
-
-            listOf(
-                EnerjiYesil,
-                GunesSari,
-                EnerjiKirmizi,
-                if (durum == HudDurumu.CEVRIMDISI) BilgiMavi else baskin,
-            ).forEachIndexed { indeks, renk ->
-                drawCircle(
-                    color = renk.copy(alpha = if (indeks == 3) 0.65f else 0.75f),
-                    radius = size.minDimension * (0.33f + indeks * 0.075f),
-                    center = merkez,
-                    style = Stroke(width = (3 + indeks).dp.toPx()),
-                )
-                if (!hareketAzaltma) {
-                    for (nokta in 0 until 3) {
-                        val radyan = Math.toRadians((aci + indeks * 54f + nokta * 120f).toDouble())
-                        val yaricap = size.minDimension * (0.33f + indeks * 0.075f)
-                        val konum = Offset(
-                            merkez.x + kotlin.math.cos(radyan).toFloat() * yaricap,
-                            merkez.y + kotlin.math.sin(radyan).toFloat() * yaricap,
-                        )
-                        drawCircle(
-                            color = renk,
-                            radius = 3.dp.toPx(),
-                            center = konum,
-                        )
-                    }
-                }
-            }
+            drawCircle(
+                color = Color.White.copy(alpha = 0.72f),
+                radius = cekirdek * 0.12f,
+                center = Offset(merkez.x - cekirdek * 0.36f, merkez.y - cekirdek * 0.38f),
+            )
         }
     }
 }
