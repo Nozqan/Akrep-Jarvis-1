@@ -19,6 +19,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,13 +46,21 @@ import com.akrep.jarvis.ai.araclar.tema.GunesSari
 import com.akrep.jarvis.ai.araclar.tema.UzaySiyahi
 import com.akrep.jarvis.ai.yapay_zeka.BaglantiDurumu
 import com.akrep.jarvis.ai.yapay_zeka.KomutYonlendirici
+import com.akrep.jarvis.ai.ozellikler.BaglamOzellikMenusu
+import com.akrep.jarvis.ai.ozellikler.OzellikAlani
+import com.akrep.jarvis.ai.ozellikler.OzellikCalistirici
+import com.akrep.jarvis.ai.ozellikler.OzellikDeposu
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AyarlarEkrani(onGeri: () -> Unit) {
     val context = LocalContext.current
     val depo = remember { AyarlarDeposu(context) }
     val yonlendirici = remember { KomutYonlendirici(context) }
+    var baglamMenuAcik by remember { mutableStateOf(false) }
+    val baglamSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val ozellikCalistirici = remember { OzellikCalistirici(context) }
     val ayarlar by depo.ayarlar.collectAsState(initial = Ayarlar())
     val islemKapsami = rememberCoroutineScope()
     var apiAnahtari by remember(ayarlar.saglayici) {
@@ -81,9 +91,14 @@ fun AyarlarEkrani(onGeri: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(0.28f),
                     vurgu = Color(0xFFA9B3C7),
                 ) { Text("Geri") }
-                KristalPanel(modifier = Modifier.fillMaxWidth(0.68f), vurgu = Altin) {
+                KristalPanel(modifier = Modifier.fillMaxWidth(0.60f), vurgu = Altin) {
                     Text("SİSTEM AYARLARI", color = Altin, fontWeight = FontWeight.Bold)
                 }
+                AkrepButon(
+                    onClick = { baglamMenuAcik = true },
+                    modifier = Modifier.fillMaxWidth(0.08f),
+                    vurgu = GunesSari,
+                ) { Text("•••") }
             }
 
             KristalPanel(vurgu = GunesSari) {
@@ -192,6 +207,15 @@ fun AyarlarEkrani(onGeri: () -> Unit) {
                 }
             }
         }
+
+        BaglamOzellikMenusu(
+            sheetState = baglamSheetState,
+            baslik = "Sistem ve Bağlantı Özellikleri",
+            ozellikler = OzellikDeposu.alanicOzellikler(OzellikAlani.SISTEM).take(22),
+            acik = baglamMenuAcik,
+            onKapat = { baglamMenuAcik = false },
+            onSec = { ozellik -> ozellikCalistirici.calistir(ozellik.anahtar) },
+        )
     }
 }
 

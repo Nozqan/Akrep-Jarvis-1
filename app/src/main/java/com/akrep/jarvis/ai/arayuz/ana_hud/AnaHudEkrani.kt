@@ -20,12 +20,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +64,12 @@ import com.akrep.jarvis.ai.sesli_asistan.ses_motoru.TurkceMetinSeslendirici
 import com.akrep.jarvis.ai.sesli_asistan.ses_motoru.UyandiriciKelimeMotoru
 import com.akrep.jarvis.ai.araclar.yardimci.PermisyonYardimcisi
 import com.akrep.jarvis.ai.sistem_izleyici.SistemDurumuKartlari
+import com.akrep.jarvis.ai.ozellikler.BaglamOzellikMenusu
+import com.akrep.jarvis.ai.ozellikler.OzellikAlani
+import com.akrep.jarvis.ai.ozellikler.OzellikCalistirici
+import com.akrep.jarvis.ai.ozellikler.OzellikDeposu
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnaHudEkrani(
     viewModel: AnaHudViewModel = viewModel(),
@@ -73,6 +81,9 @@ fun AnaHudEkrani(
     val context = LocalContext.current
     val ayarlarDeposu = remember { AyarlarDeposu(context) }
     val ayarlar by ayarlarDeposu.ayarlar.collectAsState(initial = Ayarlar())
+    var baglamMenuAcik by remember { mutableStateOf(false) }
+    val baglamSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val ozellikCalistirici = remember { OzellikCalistirici(context) }
     var mikrofonIzni by remember {
         androidx.compose.runtime.mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
@@ -201,6 +212,12 @@ fun AnaHudEkrani(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                Spacer(modifier = Modifier.width(6.dp))
+                AkrepButon(
+                    onClick = { baglamMenuAcik = true },
+                    modifier = Modifier.width(48.dp),
+                    vurgu = GunesSari,
+                ) { Text("•••", fontWeight = FontWeight.Black) }
             }
 
             KristalPanel(vurgu = Altin) {
@@ -308,5 +325,30 @@ fun AnaHudEkrani(
                 }
             }
         }
+
+        BaglamOzellikMenusu(
+            sheetState = baglamSheetState,
+            baslik = "Solar Komuta Özellikleri",
+            ozellikler = OzellikDeposu.alanicOzellikler(
+                OzellikAlani.HUD,
+                OzellikAlani.SISTEM,
+                OzellikAlani.OTOMASYON,
+            ).take(14),
+            acik = baglamMenuAcik,
+            onKapat = { baglamMenuAcik = false },
+            onSec = { ozellik ->
+                when (ozellik.anahtar) {
+                    "canli_gorus" -> onKameraAc()
+                    "gorev_merkezi" -> onGorevlerAc()
+                    "sesli_asistan" -> {
+                        if (mikrofonIzni) taniyici.dinlemeyeBasla()
+                        else izinLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                    "ayarlar" -> onAyarlarAc()
+                    "gizlilik", "konum_gecmisi", "acil_durum" -> ozellikCalistirici.calistir(ozellik.anahtar)
+                    else -> ozellikCalistirici.calistir(ozellik.anahtar)
+                }
+            },
+        )
     }
 }

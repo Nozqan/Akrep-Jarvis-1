@@ -1,0 +1,82 @@
+package com.akrep.jarvis.ai.ozellikler
+
+enum class OzellikAlani(val etiket: String) {
+    HUD("Solar komuta"),
+    CANLI_GORUS("Canlı görüş"),
+    SES("Sesli asistan"),
+    GOREV("Görev merkezi"),
+    SISTEM("Sistem"),
+    ARSIV("Arşiv"),
+    GIZLILIK("Gizlilik"),
+    OTOMASYON("Akıllı otomasyon"),
+}
+
+data class OzellikKaydi(
+    val anahtar: String,
+    val ad: String,
+    val alan: OzellikAlani,
+    val aciklama: String,
+)
+
+object OzellikDeposu {
+    val tumOzellikler: List<OzellikKaydi> = listOf(
+        OzellikKaydi("canli_gorus", "Canlı Görüş", OzellikAlani.CANLI_GORUS, "Gerçek zamanlı kamera, OCR ve nesne tarama"),
+        OzellikKaydi("sesli_asistan", "Sesli Asistan", OzellikAlani.SES, "Konuşmadan komut, STT ve Türkçe sesli yanıt"),
+        OzellikKaydi("yapay_zeka", "Yapay Zekâ", OzellikAlani.HUD, "Yerel motor ve yapılandırılabilir harici sağlayıcılar"),
+        OzellikKaydi("gorev_merkezi", "Görev Merkezi", OzellikAlani.GOREV, "Notlar, hatırlatıcılar ve konuşma geçmişi"),
+        OzellikKaydi("kamera_arsivi", "Kamera Arşivi", OzellikAlani.ARSIV, "OCR ve nesne tarama sonuçlarını saklama"),
+        OzellikKaydi("sistem_durumu", "Sistem Durumu", OzellikAlani.SISTEM, "Batarya, depolama, bellek ve ağ takibi"),
+        OzellikKaydi("dosya_yonetimi", "Dosya Yönetimi", OzellikAlani.ARSIV, "Cihaz dosyaları ve belgeler"),
+        OzellikKaydi("takvim", "Takvim", OzellikAlani.GOREV, "Randevu ve gündem oluşturma"),
+        OzellikKaydi("hava_durumu", "Hava Durumu", OzellikAlani.SISTEM, "Yerel hava görünümü"),
+        OzellikKaydi("konum_harita", "Konum ve Harita", OzellikAlani.SISTEM, "Harita ve konum eylemleri"),
+        OzellikKaydi("ceviri", "Çeviri", OzellikAlani.SES, "Metin ve konuşma çevirisi"),
+        OzellikKaydi("akilli_ev", "Akıllı Ev", OzellikAlani.OTOMASYON, "Cihaz ve rutin otomasyonları"),
+        OzellikKaydi("saglik_takibi", "Sağlık Takibi", OzellikAlani.HUD, "Sağlık verilerini görüntüleme"),
+        OzellikKaydi("veri_yedekleme", "Veri Yedekleme", OzellikAlani.ARSIV, "Verilerin güvenli yedeği"),
+        OzellikKaydi("baglanti_testi", "Bağlantı Testi", OzellikAlani.SISTEM, "Ağ ve yapay zekâ bağlantı kontrolü"),
+        OzellikKaydi("sohbet_gecmisi", "Sohbet Geçmişi", OzellikAlani.ARSIV, "Önceki komutları ve yanıtları görüntüleme"),
+        OzellikKaydi("akilli_arama", "Akıllı Arama", OzellikAlani.HUD, "Notlarda ve kayıtlarda içerik arama"),
+        OzellikKaydi("belge_tarama", "Belge Tarama", OzellikAlani.CANLI_GORUS, "OCR ile belgeyi metne dönüştürme"),
+        OzellikKaydi("qr_okuma", "QR Kod Okuma", OzellikAlani.CANLI_GORUS, "QR ve barkod tarama"),
+        OzellikKaydi("sesli_kisayollar", "Sesli Komut Kısayolları", OzellikAlani.SES, "Sık kullanılan komutları sesle çalıştırma"),
+        OzellikKaydi("alarm_merkezi", "Alarm Merkezi", OzellikAlani.GOREV, "Alarm oluşturma ve yönetimi"),
+        OzellikKaydi("zamanlayici", "Zamanlayıcı", OzellikAlani.GOREV, "Geri sayım zamanlayıcı"),
+        OzellikKaydi("kronometre", "Kronometre", OzellikAlani.GOREV, "Kesikli süre ölçümü"),
+        OzellikKaydi("medya_kontrol", "Medya Kontrolü", OzellikAlani.SES, "Oynatma, duraklatma ve ses"),
+        OzellikKaydi("telefon_kontak", "Telefon ve Kişi Kontrolü", OzellikAlani.HUD, "Telefon ve kişi işlemleri"),
+        OzellikKaydi("bildirim_merkezi", "Bildirim Merkezi", OzellikAlani.SISTEM, "Bildirim kanalları ve durumu"),
+        OzellikKaydi("uygulama_baslatici", "Uygulama Başlatıcı", OzellikAlani.HUD, "Kurulu uygulamalara hızlı yönlendirme"),
+        OzellikKaydi("klavye_asistani", "Klavye Asistanı", OzellikAlani.SES, "Metin girişini geliştirme"),
+        OzellikKaydi("ekran_okuma", "Ekran Okuma", OzellikAlani.GIZLILIK, "Erişilebilirlik ekran okuma seçenekleri"),
+        OzellikKaydi("metin_notlari", "Metin Notları", OzellikAlani.GOREV, "Metin tabanlı hızlı not"),
+        OzellikKaydi("sifre_kasasi", "Şifre Kasası", OzellikAlani.GIZLILIK, "Gizli anahtar ve kimlik verileri"),
+        OzellikKaydi("yedekleme_gecmisi", "Yedekleme Geçmişi", OzellikAlani.ARSIV, "Yedeklerin durum ve zaman kayıtları"),
+        OzellikKaydi("ag_trafik", "Ağ Trafiği İzleme", OzellikAlani.SISTEM, "Ağ kullanımını izleme"),
+        OzellikKaydi("pil_optimizasyonu", "Pil Optimizasyonu", OzellikAlani.SISTEM, "Pil tüketimini ve optimizasyonu inceleme"),
+        OzellikKaydi("hata_raporu", "Hata ve Günlük Raporları", OzellikAlani.GIZLILIK, "Tanılama ve hata kaydı"),
+        OzellikKaydi("akilli_takvim_randevu", "Akıllı Takvim Randevuları", OzellikAlani.GOREV, "Zamana göre otomatik randevu"),
+        OzellikKaydi("rutin_otomasyonlari", "Rutin Otomasyonları", OzellikAlani.OTOMASYON, "Tekrarlanan akışları otomatikleştirme"),
+        OzellikKaydi("konusma_arsivi", "Konuşma Arşivi", OzellikAlani.ARSIV, "Sesli komut ve yanıt kayıtları"),
+        OzellikKaydi("arama_yardimcisi", "Telefon Arama Yardımcısı", OzellikAlani.SES, "Arama niyetini ve hedefi çözme"),
+        OzellikKaydi("mesaj_taslaklari", "Mesaj Taslakları", OzellikAlani.SES, "Metin ve sesli mesaj taslakları"),
+        OzellikKaydi("dosya_paylasimi", "Dosya Paylaşımı", OzellikAlani.ARSIV, "Dosyaları güvenli paylaşma"),
+        OzellikKaydi("ag_dosya_tarama", "Ağ Dosya Tarama", OzellikAlani.SISTEM, "Paylaşılan ağ kaynaklarını keşfetme"),
+        OzellikKaydi("wifi_yonetimi", "Wi-Fi Yönetimi", OzellikAlani.SISTEM, "Wi-Fi bağlantı ayarları"),
+        OzellikKaydi("bluetooth_yonetimi", "Bluetooth Yönetimi", OzellikAlani.SISTEM, "Bluetooth bağlantı ayarları"),
+        OzellikKaydi("mobil_veri_kontrol", "Mobil Veri Kontrolü", OzellikAlani.SISTEM, "Mobil veri ve veri tasarrufu"),
+        OzellikKaydi("uygulama_kullanim", "Uygulama Kullanım Raporu", OzellikAlani.SISTEM, "Uygulama süresi ve kullanım verileri"),
+        OzellikKaydi("veri_tasarrufu", "Veri Tasarrufu", OzellikAlani.SISTEM, "Ağ tüketimini azaltma"),
+        OzellikKaydi("cihaz_diagnostik", "Cihaz Diagnostikleri", OzellikAlani.SISTEM, "Donanım ve yazılım tanılaması"),
+        OzellikKaydi("ekran_kisayollari", "Ekran Kısayolları", OzellikAlani.HUD, "Ana ekrana hızlı komutlar"),
+        OzellikKaydi("oyun_modu", "Oyun Modu", OzellikAlani.OTOMASYON, "Bildirim ve performans profili"),
+        OzellikKaydi("rahatsiz_etme", "Rahatsız Etme Yönetimi", OzellikAlani.SISTEM, "Bildirim sessizliği profilleri"),
+        OzellikKaydi("aydinlik_ekran", "Aydınlık ve Ekran Yönetimi", OzellikAlani.SISTEM, "Parlaklık ve uyku ayarları"),
+        OzellikKaydi("ses_profilleri", "Ses Profilleri", OzellikAlani.SES, "Medya ve bildirim ses profilleri"),
+        OzellikKaydi("konum_gecmisi", "Konum Geçmişi", OzellikAlani.GIZLILIK, "Konum geçmişi ve gizlilik kontrolü"),
+        OzellikKaydi("acil_durum", "Acil Durum Merkezi", OzellikAlani.GIZLILIK, "Acil durum araçları ve hızlı aramalar"),
+    )
+
+    fun alanicOzellikler(vararg alanlar: OzellikAlani): List<OzellikKaydi> =
+        tumOzellikler.filter { it.alan in alanlar }
+}

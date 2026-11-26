@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,6 +71,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
+import com.akrep.jarvis.ai.ozellikler.BaglamOzellikMenusu
+import com.akrep.jarvis.ai.ozellikler.OzellikAlani
+import com.akrep.jarvis.ai.ozellikler.OzellikCalistirici
+import com.akrep.jarvis.ai.ozellikler.OzellikDeposu
 
 enum class KameraDurumu(val etiket: String) {
     KAPALI("Kamera kapalı"),
@@ -80,9 +86,13 @@ enum class KameraDurumu(val etiket: String) {
     BASARISIZ("İşlem başarısız"),
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KameraEkrani(onKapat: () -> Unit) {
     val context = LocalContext.current
+    var baglamMenuAcik by remember { mutableStateOf(false) }
+    val baglamSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val ozellikCalistirici = remember { OzellikCalistirici(context) }
     var izinVerildi by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
@@ -142,11 +152,11 @@ fun KameraEkrani(onKapat: () -> Unit) {
                 ) {
                     AkrepButon(
                         onClick = onKapat,
-                        modifier = Modifier.weight(0.42f),
+                        modifier = Modifier.weight(0.30f),
                         vurgu = Color(0xFFA9B3C7),
                     ) { Text("Kapat") }
 
-                    KristalPanel(modifier = Modifier.weight(0.58f), vurgu = BilgiMavi) {
+                    KristalPanel(modifier = Modifier.weight(0.52f), vurgu = BilgiMavi) {
                         Text(
                             text = durum.etiket.uppercase(),
                             color = if (durum == KameraDurumu.BASARISIZ) Color(0xFFFF5E6C) else BilgiMavi,
@@ -156,6 +166,11 @@ fun KameraEkrani(onKapat: () -> Unit) {
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
+                    AkrepButon(
+                        onClick = { baglamMenuAcik = true },
+                        modifier = Modifier.weight(0.18f),
+                        vurgu = GunesSari,
+                    ) { Text("•••") }
                 }
 
                 KristalPanel(vurgu = GunesSari) {
@@ -240,6 +255,27 @@ fun KameraEkrani(onKapat: () -> Unit) {
                 }
             }
         }
+
+        BaglamOzellikMenusu(
+            sheetState = baglamSheetState,
+            baslik = "Canlı Görüş Araçları",
+            ozellikler = OzellikDeposu.alanicOzellikler(
+                OzellikAlani.CANLI_GORUS,
+                OzellikAlani.ARSIV,
+                OzellikAlani.SES,
+            ).take(16),
+            acik = baglamMenuAcik,
+            onKapat = { baglamMenuAcik = false },
+            onSec = { ozellik ->
+                when (ozellik.anahtar) {
+                    "kamera_arsivi", "belge_tarama", "qr_okuma" ->
+                        ozellikCalistirici.calistir(ozellik.anahtar)
+                    "dosya_yonetimi", "dosya_paylasimi", "konusma_arsivi" ->
+                        ozellikCalistirici.calistir(ozellik.anahtar)
+                    else -> ozellikCalistirici.calistir(ozellik.anahtar)
+                }
+            },
+        )
     }
 }
 

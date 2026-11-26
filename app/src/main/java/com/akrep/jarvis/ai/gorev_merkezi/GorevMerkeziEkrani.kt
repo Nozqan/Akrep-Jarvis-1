@@ -24,10 +24,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -46,10 +50,18 @@ import com.akrep.jarvis.ai.araclar.tema.UzaySiyahi
 import com.akrep.jarvis.ai.veri.depo.NotYoneticisi
 import com.akrep.jarvis.ai.veri.depo.SohbetGecmisiYoneticisi
 import com.akrep.jarvis.ai.veri.model.NotKaydi
+import com.akrep.jarvis.ai.ozellikler.BaglamOzellikMenusu
+import com.akrep.jarvis.ai.ozellikler.OzellikAlani
+import com.akrep.jarvis.ai.ozellikler.OzellikCalistirici
+import com.akrep.jarvis.ai.ozellikler.OzellikDeposu
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GorevMerkeziEkrani(onGeri: () -> Unit) {
     val context = LocalContext.current
+    var baglamMenuAcik by remember { mutableStateOf(false) }
+    val baglamSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val ozellikCalistirici = remember { OzellikCalistirici(context) }
     val notYoneticisi = remember { NotYoneticisi(context) }
     val notlar = remember {
         mutableStateListOf<NotKaydi>().apply { addAll(notYoneticisi.hepsi()) }
@@ -91,7 +103,7 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(0.28f),
                         vurgu = Color(0xFFA9B3C7),
                     ) { Text("Geri") }
-                    KristalPanel(modifier = Modifier.fillMaxWidth(0.68f), vurgu = Altin) {
+                    KristalPanel(modifier = Modifier.fillMaxWidth(0.60f), vurgu = Altin) {
                         Text(
                             text = "GÖREV MERKEZİ",
                             color = Altin,
@@ -99,6 +111,11 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
                             fontSize = 14.sp,
                         )
                     }
+                    AkrepButon(
+                        onClick = { baglamMenuAcik = true },
+                        modifier = Modifier.fillMaxWidth(0.08f),
+                        vurgu = GunesSari,
+                    ) { Text("•••") }
                 }
             }
 
@@ -273,5 +290,14 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
                 }
             }
         }
+
+        BaglamOzellikMenusu(
+            sheetState = baglamSheetState,
+            baslik = "Görev ve Zaman Özellikleri",
+            ozellikler = OzellikDeposu.alanicOzellikler(OzellikAlani.GOREV).take(18),
+            acik = baglamMenuAcik,
+            onKapat = { baglamMenuAcik = false },
+            onSec = { ozellik -> ozellikCalistirici.calistir(ozellik.anahtar) },
+        )
     }
 }
