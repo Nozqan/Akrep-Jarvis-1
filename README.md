@@ -1,1 +1,0 @@
-# Akrep-Jarvis-1
