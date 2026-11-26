@@ -32,7 +32,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Debug APK derle
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace --info
 
       - name: APK dosyasını workflow çıktısı olarak yükle
         uses: actions/upload-artifact@v4
