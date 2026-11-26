@@ -28,6 +28,7 @@ fun SistemDurumuKartlari(durum: SistemDurumu) {
         ) {
             listOf(
                 "Batarya" to durum.batarya,
+                "Batarya sıcaklığı" to durum.bataryaSicakligi,
                 "Depolama" to durum.depolama,
                 "Bellek" to durum.bellek,
                 "Ağ" to durum.ag,

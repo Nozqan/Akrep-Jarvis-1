@@ -41,16 +41,24 @@ import com.nebiozkan.akrepjarvis.ortak.tema.EnerjiYesil
 import com.nebiozkan.akrepjarvis.ortak.tema.GunesSari
 import com.nebiozkan.akrepjarvis.ortak.tema.UzaySiyahi
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import com.nebiozkan.akrepjarvis.ayarlar.Ayarlar
+import com.nebiozkan.akrepjarvis.ayarlar.AyarlarDeposu
 
 @Composable
 fun GirisEkrani(onGirisTamamlandi: () -> Unit) {
+    val context = LocalContext.current
+    val ayarlarDeposu = remember { AyarlarDeposu(context) }
+    val ayarlar by ayarlarDeposu.ayarlar.collectAsState(initial = Ayarlar())
     var adim by remember { mutableStateOf("Açılıyor") }
     LaunchedEffect(Unit) {
-        delay(900)
+        val toplamSure = if (ayarlar.tamGirisAnimasyonu) 900L else 450L
+        delay(toplamSure)
         adim = "Sistem kontrolü"
-        delay(900)
+        delay(if (ayarlar.tamGirisAnimasyonu) 900L else 450L)
         adim = "Hazır"
-        delay(700)
+        delay(if (ayarlar.tamGirisAnimasyonu) 700L else 350L)
         onGirisTamamlandi()
     }
 
@@ -75,6 +83,19 @@ fun GirisEkrani(onGirisTamamlandi: () -> Unit) {
             ),
         contentAlignment = Alignment.Center,
     ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            for (i in 0 until 48) {
+                val x = (i * 83 % 997) / 997f * size.width
+                val y = (i * 47 % 991) / 991f * size.height
+                val pariltama = 0.25f + ((i * 13) % 50) / 100f
+                drawCircle(
+                    color = Color.White.copy(alpha = pariltama),
+                    radius = if (i % 9 == 0) 1.8.dp.toPx() else 1.dp.toPx(),
+                    center = Offset(x, y),
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),

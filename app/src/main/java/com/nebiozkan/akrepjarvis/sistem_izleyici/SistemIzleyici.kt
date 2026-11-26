@@ -12,6 +12,7 @@ import android.os.StatFs
 
 data class SistemDurumu(
     val batarya: String = "Kullanılamıyor",
+    val bataryaSicakligi: String = "Kullanılamıyor",
     val depolama: String = "Kullanılamıyor",
     val bellek: String = "Kullanılamıyor",
     val ag: String = "Kullanılamıyor",
@@ -20,6 +21,7 @@ data class SistemDurumu(
 class SistemIzleyici(private val context: Context) {
     fun guncelDurumuAl(): SistemDurumu = SistemDurumu(
         batarya = bataryaDurumu(),
+        bataryaSicakligi = bataryaSicakligi(),
         depolama = depolamaDurumu(),
         bellek = bellekDurumu(),
         ag = agDurumu(),
@@ -41,6 +43,15 @@ class SistemIzleyici(private val context: Context) {
 
         val yuzdeMetni = "${yuzde * 100 / olcek}%"
         return if (sarjOluyor) "$yuzdeMetni · Şarj oluyor" else yuzdeMetni
+    }
+
+    private fun bataryaSicakligi(): String {
+        val intent = context.registerReceiver(
+            null,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED),
+        ) ?: return "Kullanılamıyor"
+        val sicaklik = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+        return if (sicaklik >= 0) "${sicaklik / 10.0} °C" else "Kullanılamıyor"
     }
 
     private fun depolamaDurumu(): String {
