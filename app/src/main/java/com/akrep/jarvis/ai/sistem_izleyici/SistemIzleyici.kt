@@ -84,10 +84,14 @@ class SistemIzleyici(private val context: Context) {
             ?: return "Kullanılamıyor"
         val ag = yonetici.activeNetwork ?: return "Çevrimdışı"
         val ozellikler = yonetici.getNetworkCapabilities(ag) ?: return "Kullanılamıyor"
+        if (!ozellikler.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+            return "Çevrimdışı"
+        }
         return when {
             ozellikler.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi bağlı"
             ozellikler.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Mobil veri bağlı"
             ozellikler.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet bağlı"
+            ozellikler.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) -> "İnternet bağlı"
             else -> "Bağlantı türü kullanılamıyor"
         }
     }
@@ -97,6 +101,11 @@ class SistemIzleyici(private val context: Context) {
             ?: return "Kullanılamıyor"
         val ag = yonetici.activeNetwork ?: return "Çevrimdışı"
         val ozellikler = yonetici.getNetworkCapabilities(ag) ?: return "Kullanılamıyor"
+        if (!ozellikler.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) ||
+            !ozellikler.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        ) {
+            return "Çevrimdışı"
+        }
         val hızı = ozellikler.linkDownstreamBandwidthKbps
         return if (hızı > 0) "~$hızı kb/sn" else "Kullanılamıyor"
     }
