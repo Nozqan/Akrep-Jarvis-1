@@ -32,7 +32,7 @@ androidx-camerax-camera2 = { module = "androidx.camera:camera-camera2", version.
 androidx-camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkitText" }
-mlkit-object-detection = { module = "com.google.mlkit:object-detection", version.ref = "mlkitObject" }
+mlkit-objects-detection = { module = "com.google.mlkit:object-detection", version.ref = "mlkitObject" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }

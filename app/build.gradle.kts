@@ -61,7 +61,7 @@ dependencies {
     implementation(libs.androidx.camerax.lifecycle)
     implementation(libs.androidx.camerax.view)
     implementation(libs.mlkit.text.recognition)
-    implementation(libs.mlkit.object.detection)
+    implementation(libs.mlkit.objects.detection)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
