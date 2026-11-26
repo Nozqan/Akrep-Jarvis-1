@@ -11,6 +11,7 @@ import com.nebiozkan.akrepjarvis.sistem_izleyici.SistemDurumu
 import com.nebiozkan.akrepjarvis.veri.depo.NotYoneticisi
 import com.nebiozkan.akrepjarvis.yapay_zeka.KomutYonlendirici
 import com.nebiozkan.akrepjarvis.gunes_hud.HudDurumu
+import com.nebiozkan.akrepjarvis.veri.depo.SohbetGecmisiYoneticisi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -30,12 +31,16 @@ class AnaHudViewModel(application: Application) : AndroidViewModel(application) 
     var hataMesaji by mutableStateOf<String?>(null)
         private set
 
+    var eylem by mutableStateOf<String?>(null)
+        private set
+
     var sistemDurumu by mutableStateOf(SistemDurumu())
         private set
 
     private val sistemIzleyici = SistemIzleyici(application)
     private val komutYonlendirici = KomutYonlendirici(application)
     private val notYoneticisi = NotYoneticisi(application)
+    private val sohbetGecmisi = SohbetGecmisiYoneticisi(application)
 
     init {
         sistemDurumu = sistemIzleyici.guncelDurumuAl()
@@ -62,6 +67,8 @@ class AnaHudViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val yanit = komutYonlendirici.yanitOlustur(metin)
             cevap = yanit.metin
+            eylem = yanit.eylem
+            sohbetGecmisi.ekle(metin, yanit.metin, yanit.kaynak)
             komutMetni = ""
             hudDurumu = if (yanit.kaynak == "Bağlantı hatası") HudDurumu.HATA else HudDurumu.HAZIR
         }
@@ -79,5 +86,9 @@ class AnaHudViewModel(application: Application) : AndroidViewModel(application) 
     fun hataAyarla(metin: String) {
         hataMesaji = metin
         hudDurumu = HudDurumu.HATA
+    }
+
+    fun eylemiTuket() {
+        eylem = null
     }
 }

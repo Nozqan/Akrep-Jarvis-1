@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 data class KomutYaniti(
     val metin: String,
     val kaynak: String,
+    val eylem: String? = null,
 )
 
 class KomutYonlendirici(context: Context) {
@@ -22,7 +23,7 @@ class KomutYonlendirici(context: Context) {
     suspend fun yanitOlustur(metin: String): KomutYaniti {
         val yerel = yerelKomutuCalistir(metin)
         if (yerel.yerelCozuldu) {
-            return KomutYaniti(yerel.yanit, "Çevrimdışı yerel komut")
+            return KomutYaniti(yerel.yanit, "Çevrimdışı yerel komut", yerel.eylem)
         }
 
         val ayarlar = ayarlarDeposu.ayarlar.first()

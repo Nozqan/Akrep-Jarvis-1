@@ -32,6 +32,10 @@ fun SistemDurumuKartlari(durum: SistemDurumu) {
                 "Depolama" to durum.depolama,
                 "Bellek" to durum.bellek,
                 "Ağ" to durum.ag,
+                "Ağ gecikmesi" to durum.agHizi,
+                "Mikrofon" to durum.mikrofon,
+                "Kamera" to durum.kamera,
+                "Yapay zekâ" to durum.yapayZeka,
             ).forEach { (etiket, deger) ->
                 Text(
                     text = "$etiket: $deger",

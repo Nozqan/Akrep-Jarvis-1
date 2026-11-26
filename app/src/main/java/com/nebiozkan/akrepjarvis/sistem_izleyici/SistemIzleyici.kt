@@ -16,6 +16,10 @@ data class SistemDurumu(
     val depolama: String = "Kullanılamıyor",
     val bellek: String = "Kullanılamıyor",
     val ag: String = "Kullanılamıyor",
+    val agHizi: String = "Kullanılamıyor",
+    val mikrofon: String = "Dinleme kapalı",
+    val kamera: String = "Kamera kapalı",
+    val yapayZeka: String = "Yerel motor hazır",
 )
 
 class SistemIzleyici(private val context: Context) {

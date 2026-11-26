@@ -14,6 +14,7 @@ import java.text.Normalizer
 data class YerelKomutSonucu(
     val yanit: String,
     val yerelCozuldu: Boolean,
+    val eylem: String? = null,
 )
 
 class YerelKomutMotoru(
@@ -78,11 +79,11 @@ class YerelKomutMotoru(
                 )
             }
             komut.contains("kamera") -> {
-                YerelKomutSonucu("Kamera ekranı açılmaya hazır.", true)
+                YerelKomutSonucu("Kamera ekranı açılıyor.", true, "kamera")
             }
             komut.contains("ayar") -> {
                 context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                YerelKomutSonucu("Ayarlar açıldı.", true)
+                YerelKomutSonucu("Ayarlar açıldı.", true, "ayarlar")
             }
             else -> YerelKomutSonucu(
                 "Bu komutu çevrimdışı yerel motorla anlayamadım.",

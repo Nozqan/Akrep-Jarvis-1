@@ -96,6 +96,9 @@ fun KameraEkrani(onKapat: () -> Unit) {
     var durum by remember { mutableStateOf(KameraDurumu.KAPALI) }
     var ocrSonucu by remember { mutableStateOf("") }
     var nesneSonucu by remember { mutableStateOf("") }
+    val ortamAnalizcisi = remember { OrtamAnalizcisi() }
+    val elJestAlgilayici = remember { ElJestAlgilayici() }
+    val taramaArsivi = remember { TaramaArsivi(context) }
     var arananDosya by remember { mutableStateOf("") }
 
     val izinLauncher = rememberLauncherForActivityResult(
@@ -124,7 +127,7 @@ fun KameraEkrani(onKapat: () -> Unit) {
                     }
                 },
                 onNesneSonuc = { nesneler ->
-                    nesneSonucu = nesneler.joinToString(", ").ifBlank { "Nesne algılanmadı." }
+                    nesneSonucu = ortamAnalizcisi.analizEt(nesneler)
                 },
             )
 
@@ -171,11 +174,21 @@ fun KameraEkrani(onKapat: () -> Unit) {
                         fontSize = 12.sp,
                         maxLines = 3,
                     )
+                    Text(
+                        text = elJestAlgilayici.destekDurumu(),
+                        color = Color(0xFFA9B3C7),
+                        fontSize = 11.sp,
+                        maxLines = 3,
+                    )
                     if (ocrSonucu.isNotBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = {
-                                arananDosya = taramaArsivle(context, ocrSonucu)
+                                arananDosya = taramaArsivi.kaydet(ocrSonucu)
+                                    .fold(
+                                        onSuccess = { it.name },
+                                        onFailure = { "Arşivlenemedi" },
+                                    )
                             },
                             shape = RoundedCornerShape(22.dp),
                         ) {
@@ -390,21 +403,4 @@ private fun TaramaKatmani(durum: KameraDurumu) {
             StrokeCap.Round,
         )
     }
-}
-
-private fun taramaArsivle(context: Context, metin: String): String {
-    val dosyaAdi = "tarama_" +
-        SimpleDateFormat("yyyyMMdd_HHmmss", Locale("tr", "TR")).format(Date()) +
-        ".txt"
-    val dosya = File(context.filesDir, dosyaAdi)
-    runCatching {
-        dosya.writeText(
-            "AKREP JARVIS tarama sonucu\n" +
-                "Tarih: ${SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale("tr", "TR")).format(Date())}\n\n" +
-                metin,
-        )
-    }.onFailure {
-        return "Arşivlenemedi"
-    }
-    return dosya.name
 }

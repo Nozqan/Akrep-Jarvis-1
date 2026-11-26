@@ -88,6 +88,19 @@ fun AnaHudEkrani(
         }
     }
 
+    LaunchedEffect(viewModel.eylem) {
+        when (viewModel.eylem) {
+            "kamera" -> {
+                viewModel.eylemiTuket()
+                onKameraAc()
+            }
+            "ayarlar" -> {
+                viewModel.eylemiTuket()
+                onAyarlarAc()
+            }
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             taniyici.serbestBirak()
@@ -123,7 +136,10 @@ fun AnaHudEkrani(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    GunesHud(viewModel.hudDurumu)
+                    GunesHud(
+                        viewModel.hudDurumu,
+                        hareketAzaltma = ayarlar.hareketAzaltma,
+                    )
                     Text(
                         text = if (viewModel.hataMesaji != null) viewModel.hataMesaji!! else viewModel.cevap.ifBlank { durum },
                         color = if (viewModel.hataMesaji != null) Color(0xFFFF5E6C) else Color(0xFFA9B3C7),

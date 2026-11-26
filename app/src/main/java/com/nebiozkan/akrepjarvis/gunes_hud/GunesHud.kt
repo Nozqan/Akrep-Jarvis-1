@@ -40,6 +40,7 @@ fun GunesHud(
     durum: HudDurumu,
     modifier: Modifier = Modifier,
     genlik: Float = 0f,
+    hareketAzaltma: Boolean = false,
 ) {
     val sonsuz = rememberInfiniteTransition(label = "gunes_hud")
     val aci by sonsuz.animateFloat(
@@ -47,7 +48,7 @@ fun GunesHud(
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             tween(
-                durationMillis = when (durum) {
+                durationMillis = if (hareketAzaltma) 6000 else when (durum) {
                     HudDurumu.DINLIYOR -> 900
                     HudDurumu.DUSUNUYOR -> 1300
                     HudDurumu.KONUSUYOR -> 700
@@ -100,18 +101,20 @@ fun GunesHud(
                     center = merkez,
                     style = Stroke(width = (3 + indeks).dp.toPx()),
                 )
-                for (nokta in 0 until 3) {
-                    val radyan = Math.toRadians((aci + indeks * 54f + nokta * 120f).toDouble())
-                    val yaricap = size.minDimension * (0.33f + indeks * 0.075f)
-                    val konum = Offset(
-                        merkez.x + kotlin.math.cos(radyan).toFloat() * yaricap,
-                        merkez.y + kotlin.math.sin(radyan).toFloat() * yaricap,
-                    )
-                    drawCircle(
-                        color = renk,
-                        radius = 3.dp.toPx(),
-                        center = konum,
-                    )
+                if (!hareketAzaltma) {
+                    for (nokta in 0 until 3) {
+                        val radyan = Math.toRadians((aci + indeks * 54f + nokta * 120f).toDouble())
+                        val yaricap = size.minDimension * (0.33f + indeks * 0.075f)
+                        val konum = Offset(
+                            merkez.x + kotlin.math.cos(radyan).toFloat() * yaricap,
+                            merkez.y + kotlin.math.sin(radyan).toFloat() * yaricap,
+                        )
+                        drawCircle(
+                            color = renk,
+                            radius = 3.dp.toPx(),
+                            center = konum,
+                        )
+                    }
                 }
             }
         }

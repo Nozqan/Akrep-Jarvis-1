@@ -45,6 +45,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import com.nebiozkan.akrepjarvis.ayarlar.Ayarlar
 import com.nebiozkan.akrepjarvis.ayarlar.AyarlarDeposu
+import com.nebiozkan.akrepjarvis.giris_ekrani.GirisAnimasyonlari
 
 @Composable
 fun GirisEkrani(onGirisTamamlandi: () -> Unit) {
@@ -53,12 +54,12 @@ fun GirisEkrani(onGirisTamamlandi: () -> Unit) {
     val ayarlar by ayarlarDeposu.ayarlar.collectAsState(initial = Ayarlar())
     var adim by remember { mutableStateOf("Açılıyor") }
     LaunchedEffect(Unit) {
-        val toplamSure = if (ayarlar.tamGirisAnimasyonu) 900L else 450L
-        delay(toplamSure)
+        val sureler = GirisAnimasyonlari.sureMilisaniye(ayarlar.tamGirisAnimasyonu)
+        delay(sureler[0])
         adim = "Sistem kontrolü"
-        delay(if (ayarlar.tamGirisAnimasyonu) 900L else 450L)
+        delay(sureler[1])
         adim = "Hazır"
-        delay(if (ayarlar.tamGirisAnimasyonu) 700L else 350L)
+        delay(sureler[2])
         onGirisTamamlandi()
     }
 

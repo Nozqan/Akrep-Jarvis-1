@@ -18,6 +18,7 @@ import com.nebiozkan.akrepjarvis.giris_ekrani.GirisEkrani
 import com.nebiozkan.akrepjarvis.gorev_merkezi.GorevMerkeziEkrani
 import com.nebiozkan.akrepjarvis.ortak.tema.AkrepJarvisTema
 import com.nebiozkan.akrepjarvis.ayarlar.GizlilikEkrani
+import com.nebiozkan.akrepjarvis.gezinme.AkrepNavigasyon
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,26 +35,26 @@ class MainActivity : ComponentActivity() {
                 } else {
                     NavHost(
                         navController = navController,
-                        startDestination = "hud",
+                        startDestination = AkrepNavigasyon.HUD,
                     ) {
-                        composable("hud") {
+                        composable(AkrepNavigasyon.HUD) {
                             AnaHudEkrani(
-                                onKameraAc = { navController.navigate("kamera") },
-                                onGorevlerAc = { navController.navigate("gorevler") },
-                                onAyarlarAc = { navController.navigate("ayarlar") },
-                                onGizlilikAc = { navController.navigate("gizlilik") },
+                                onKameraAc = { navController.navigate(AkrepNavigasyon.KAMERA) },
+                                onGorevlerAc = { navController.navigate(AkrepNavigasyon.GOREVLER) },
+                                onAyarlarAc = { navController.navigate(AkrepNavigasyon.AYARLAR) },
+                                onGizlilikAc = { navController.navigate(AkrepNavigasyon.GIZLILIK) },
                             )
                         }
-                        composable("kamera") {
+                        composable(AkrepNavigasyon.KAMERA) {
                             KameraEkrani(onKapat = { navController.popBackStack() })
                         }
-                        composable("gorevler") {
+                        composable(AkrepNavigasyon.GOREVLER) {
                             GorevMerkeziEkrani(onGeri = { navController.popBackStack() })
                         }
-                        composable("ayarlar") {
+                        composable(AkrepNavigasyon.AYARLAR) {
                             AyarlarEkrani(onGeri = { navController.popBackStack() })
                         }
-                        composable("gizlilik") {
+                        composable(AkrepNavigasyon.GIZLILIK) {
                             GizlilikEkrani(onGeri = { navController.popBackStack() })
                         }
                     }

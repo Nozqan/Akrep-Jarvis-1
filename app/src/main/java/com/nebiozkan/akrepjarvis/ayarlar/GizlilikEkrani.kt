@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import com.nebiozkan.akrepjarvis.ortak.bilesenler.OvalCamPanel
 import com.nebiozkan.akrepjarvis.ortak.tema.Altin
 import com.nebiozkan.akrepjarvis.veri.depo.NotYoneticisi
+import com.nebiozkan.akrepjarvis.veri.depo.SohbetGecmisiYoneticisi
+import com.nebiozkan.akrepjarvis.canli_kamera.TaramaArsivi
 import java.io.File
 
 @Composable
@@ -81,10 +83,9 @@ fun GizlilikEkrani(onGeri: () -> Unit) {
                 onClick = {
                     val notlar = NotYoneticisi(context)
                     notlar.hepsi().forEach { notlar.sil(it.id) }
-                    context.filesDir.listFiles()
-                        ?.filter { it.name.startsWith("tarama_") }
-                        ?.forEach(File::delete)
-                    sonuc.value = "Notlar ve kamera tarama arşivleri silindi."
+                    SohbetGecmisiYoneticisi(context).temizle()
+                    TaramaArsivi(context).temizle()
+                    sonuc.value = "Notlar, sohbet geçmişi ve kamera tarama arşivleri silindi."
                 },
                 shape = RoundedCornerShape(22.dp),
             ) { Text("Notları ve tarama arşivini temizle") }
