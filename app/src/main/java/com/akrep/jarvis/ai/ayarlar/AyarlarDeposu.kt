@@ -44,7 +44,20 @@ class AyarlarDeposu(private val context: Context) {
     }
 
     suspend fun saglayiciAyarla(deger: String) =
-        context.ayarlarDataStore.edit { it[Anahtarlar.saglayici] = deger }
+        context.ayarlarDataStore.edit {
+            it[Anahtarlar.saglayici] = deger
+            when (deger) {
+                "Gemini" -> {
+                    it[Anahtarlar.model] = "gemini-1.5-flash"
+                    it[Anahtarlar.ucNokta] = "https://generativelanguage.googleapis.com/v1beta"
+                }
+                "OpenAI" -> {
+                    it[Anahtarlar.model] = "gpt-4o-mini"
+                    it[Anahtarlar.ucNokta] = "https://api.openai.com/v1"
+                }
+                else -> Unit
+            }
+        }
 
     suspend fun ucNoktaAyarla(deger: String) =
         context.ayarlarDataStore.edit { it[Anahtarlar.ucNokta] = deger }

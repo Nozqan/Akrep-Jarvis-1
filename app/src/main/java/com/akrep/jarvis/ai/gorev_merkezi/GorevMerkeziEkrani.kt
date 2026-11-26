@@ -179,17 +179,19 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
                     Spacer(modifier = Modifier.height(8.dp))
                     AkrepButon(
                         onClick = {
-                            val saatDegeri = saat.value.toIntOrNull()?.coerceIn(0, 23)
-                            val dakikaDegeri = dakika.value.toIntOrNull()?.coerceIn(0, 59)
-                            if (saatDegeri == null || dakikaDegeri == null) {
-                                durumMesaji.value = "Saat ve dakika doğru aralıkta olmalı."
-                            } else {
-                                hatirlatici.alarmEkraniniAc(
-                                    hatirlatmaMesaji.value.ifBlank { "AKREP JARVIS hatırlatıcısı" },
-                                    saatDegeri,
-                                    dakikaDegeri,
-                                )
+                            val saatDegeri = saat.value.toIntOrNull()
+                            val dakikaDegeri = dakika.value.toIntOrNull()
+                            if (!HatirlaticiSaatKontrolu.gecerliMi(saatDegeri, dakikaDegeri)) {
+                                durumMesaji.value = "Saat 00-23, dakika 00-59 arasında olmalı."
+                                return@AkrepButon
                             }
+                            val onayliSaat = saatDegeri ?: return@AkrepButon
+                            val onayliDakika = dakikaDegeri ?: return@AkrepButon
+                            hatirlatici.alarmEkraniniAc(
+                                hatirlatmaMesaji.value.ifBlank { "AKREP JARVIS hatırlatıcısı" },
+                                onayliSaat,
+                                onayliDakika,
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         vurgu = EnerjiYesil,

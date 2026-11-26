@@ -27,6 +27,12 @@ class KomutYonlendirici(context: Context) {
         }
 
         val ayarlar = ayarlarDeposu.ayarlar.first()
+        if (ayarlar.saglayici == "Yerel") {
+            return KomutYaniti(
+                "Bu komut yerel motor tarafından çözülemedi.",
+                "Çevrimdışı yerel komut",
+            )
+        }
         if (!ayarlar.hariciYapayZekaIzni) {
             return KomutYaniti(
                 "Bu bilgi veya işlem için internet bağlantısı ve harici yapay zekâ izni gerekiyor.",
@@ -75,6 +81,12 @@ class KomutYonlendirici(context: Context) {
 
     suspend fun baglantiKontrolu(): BaglantiDurumu {
         val ayarlar = ayarlarDeposu.ayarlar.first()
+        if (ayarlar.saglayici == "Yerel") {
+            return BaglantiDurumu.Bagli
+        }
+        if (!ayarlar.hariciYapayZekaIzni) {
+            return BaglantiDurumu.Hata("Harici yapay zekaya veri gönderme izni kapalı.")
+        }
         val saglayici: YapayZekaSaglayici = when (ayarlar.saglayici) {
             "Gemini" -> GeminiSaglayici(
                 anahtarDeposuOku("gemini_api_key"),

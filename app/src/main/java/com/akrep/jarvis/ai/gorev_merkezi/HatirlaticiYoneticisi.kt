@@ -6,6 +6,11 @@ import android.os.Build
 import android.provider.AlarmClock
 import android.provider.Settings
 
+object HatirlaticiSaatKontrolu {
+    fun gecerliMi(saat: Int?, dakika: Int?): Boolean =
+        saat != null && saat in 0..23 && dakika != null && dakika in 0..59
+}
+
 class HatirlaticiYoneticisi(private val context: Context) {
     fun alarmEkraniniAc(mesaj: String, saat: Int, dakika: Int) {
         val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {

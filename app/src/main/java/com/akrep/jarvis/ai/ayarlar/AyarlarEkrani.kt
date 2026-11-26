@@ -132,8 +132,14 @@ fun AyarlarEkrani(onGeri: () -> Unit) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         AkrepButon(
                             onClick = {
-                                yonlendirici.apiAnahtariKaydet(ayarlar.saglayici, apiAnahtari)
-                                baglantiMesaji = "Anahtar şifreli depoya kaydedildi."
+                                val temizAnahtar = apiAnahtari.trim()
+                                if (temizAnahtar.isBlank()) {
+                                    baglantiMesaji = "API anahtarı boş olamaz."
+                                } else {
+                                    yonlendirici.apiAnahtariKaydet(ayarlar.saglayici, temizAnahtar)
+                                    apiAnahtari = temizAnahtar
+                                    baglantiMesaji = "Anahtar şifreli depoya kaydedildi."
+                                }
                             },
                             modifier = Modifier.weight(1f),
                             vurgu = EnerjiYesil,

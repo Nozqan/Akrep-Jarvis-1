@@ -142,6 +142,9 @@ class YerelKomutMotoru(
         val ag = yonetici.activeNetwork ?: return "İnternet bağlantısı yok"
         val ozellikler = yonetici.getNetworkCapabilities(ag)
             ?: return "Ağ bilgisi kullanılamıyor"
+        if (!ozellikler.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+            return "İnternet bağlantısı doğrulanmadı"
+        }
         return when {
             ozellikler.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi bağlı"
             ozellikler.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) -> "Mobil veri bağlı"

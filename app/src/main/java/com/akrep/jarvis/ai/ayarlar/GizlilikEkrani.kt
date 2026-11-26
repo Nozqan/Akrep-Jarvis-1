@@ -34,6 +34,7 @@ import com.akrep.jarvis.ai.araclar.tema.UzaySiyahi
 import com.akrep.jarvis.ai.canli_gorus.canli_kamera.TaramaArsivi
 import com.akrep.jarvis.ai.veri.depo.NotYoneticisi
 import com.akrep.jarvis.ai.veri.depo.SohbetGecmisiYoneticisi
+import com.akrep.jarvis.ai.yapay_zeka.KomutYonlendirici
 
 @Composable
 fun GizlilikEkrani(onGeri: () -> Unit) {
@@ -91,7 +92,10 @@ fun GizlilikEkrani(onGeri: () -> Unit) {
                         notYoneticisi.hepsi().forEach { notYoneticisi.sil(it.id) }
                         SohbetGecmisiYoneticisi(context).temizle()
                         TaramaArsivi(context).temizle()
-                        sonuc.value = "Notlar, sohbet geçmişi ve tarama arşivleri silindi."
+                        val yonlendirici = KomutYonlendirici(context)
+                        yonlendirici.apiAnahtariSil("Gemini")
+                        yonlendirici.apiAnahtariSil("OpenAI")
+                        sonuc.value = "Notlar, sohbet geçmişi, tarama arşivleri ve API anahtarları silindi."
                     },
                     modifier = Modifier.fillMaxWidth(),
                     vurgu = Color(0xFFFF5E6C),

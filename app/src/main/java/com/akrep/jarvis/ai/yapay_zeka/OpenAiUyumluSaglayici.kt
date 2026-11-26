@@ -22,9 +22,13 @@ class OpenAiUyumluSaglayici(
 
     override suspend fun baglantiKontrolu(): BaglantiDurumu = withContext(Dispatchers.IO) {
         if (anahtar.isNullOrBlank()) return@withContext BaglantiDurumu.Hata("API anahtarı tanımlı değil.")
+        val temelAdres = ucNokta.trim()
+        if (!temelAdres.startsWith("https://") && !temelAdres.startsWith("http://")) {
+            return@withContext BaglantiDurumu.Hata("API uç noktası geçerli bir HTTP adresi değil.")
+        }
         try {
             val istek = Request.Builder()
-                .url(ucNokta.trimEnd('/') + "/models")
+                .url(temelAdres.trimEnd('/') + "/models")
                 .addHeader("Authorization", "Bearer $anahtar")
                 .get()
                 .build()
@@ -42,6 +46,10 @@ class OpenAiUyumluSaglayici(
             if (anahtar.isNullOrBlank()) {
                 return@withContext Result.failure(IllegalStateException("API anahtarı tanımlı değil"))
             }
+            val temelAdres = ucNokta.trim()
+            if (!temelAdres.startsWith("https://") && !temelAdres.startsWith("http://")) {
+                return@withContext Result.failure(IllegalArgumentException("API uç noktası geçerli değil"))
+            }
             val govde = JSONObject()
                 .put("model", model.ifBlank { "gpt-4o-mini" })
                 .put(
@@ -58,7 +66,7 @@ class OpenAiUyumluSaglayici(
                 )
 
             val httpIstek = Request.Builder()
-                .url(ucNokta.trimEnd('/') + "/chat/completions")
+                .url(temelAdres.trimEnd('/') + "/chat/completions")
                 .addHeader("Authorization", "Bearer $anahtar")
                 .addHeader("Content-Type", "application/json")
                 .post(govde.toString().toRequestBody("application/json".toMediaType()))
