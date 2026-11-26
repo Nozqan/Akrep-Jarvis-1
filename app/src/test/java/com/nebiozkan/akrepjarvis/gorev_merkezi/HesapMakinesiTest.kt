@@ -7,12 +7,12 @@ import org.junit.Test
 class HesapMakinesiTest {
     @Test
     fun toplama_calismali() {
-        assertEquals(12.0, HesapMakinesi.hesapla("7 + 5"), 0.001)
+        assertEquals(12.0, HesapMakinesi.hesapla("7 + 5") ?: Double.NaN, 0.001)
     }
 
     @Test
     fun carpma_cikarmadan_once_calismali() {
-        assertEquals(14.0, HesapMakinesi.hesapla("2 + 3 * 4"), 0.001)
+        assertEquals(14.0, HesapMakinesi.hesapla("2 + 3 * 4") ?: Double.NaN, 0.001)
     }
 
     @Test
