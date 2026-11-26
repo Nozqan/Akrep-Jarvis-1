@@ -39,6 +39,7 @@ import com.nebiozkan.akrepjarvis.ortak.tema.Altin
 import com.nebiozkan.akrepjarvis.ortak.tema.UzaySiyahi
 import com.nebiozkan.akrepjarvis.veri.depo.NotYoneticisi
 import com.nebiozkan.akrepjarvis.veri.model.NotKaydi
+import com.nebiozkan.akrepjarvis.veri.depo.SohbetGecmisiYoneticisi
 
 @Composable
 fun GorevMerkeziEkrani(onGeri: () -> Unit) {
@@ -52,6 +53,7 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
     val saat = remember { mutableStateOf("09") }
     val dakika = remember { mutableStateOf("30") }
     val hatirlaticiYoneticisi = remember { HatirlaticiYoneticisi(context) }
+    val sohbetGecmisi = remember { SohbetGecmisiYoneticisi(context).hepsi() }
 
     val bildirimLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -176,6 +178,21 @@ fun GorevMerkeziEkrani(onGeri: () -> Unit) {
 
         if (bildirimDurumu.value.isNotBlank()) {
             Text(bildirimDurumu.value, color = Color(0xFFA9B3C7), fontSize = 12.sp)
+        }
+
+        if (sohbetGecmisi.isNotEmpty()) {
+            OvalCamPanel {
+                Text("Son yapay zekâ konuşmaları", color = Altin, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(6.dp))
+                sohbetGecmisi.take(3).forEach { kayit ->
+                    Text(
+                        text = "Sen: ${kayit.kullaniciMesaji}\nJarvis: ${kayit.yanit}",
+                        color = Color(0xFFA9B3C7),
+                        fontSize = 12.sp,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
         }
 
         LazyColumn(

@@ -24,4 +24,9 @@ class HesapMakinesiTest {
     fun metin_ifade_bos_sonuc_donmeli() {
         assertNull(HesapMakinesi.hesapla("hava durumu"))
     }
+
+    @Test
+    fun cikarma_calismali() {
+        assertEquals(3.0, HesapMakinesi.hesapla("8 - 5") ?: Double.NaN, 0.001)
+    }
 }

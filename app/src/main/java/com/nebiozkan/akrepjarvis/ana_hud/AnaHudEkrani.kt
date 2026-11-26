@@ -46,6 +46,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.nebiozkan.akrepjarvis.ayarlar.Ayarlar
 import com.nebiozkan.akrepjarvis.ayarlar.AyarlarDeposu
+import com.nebiozkan.akrepjarvis.ses_motoru.UyandiriciKelimeMotoru
 
 @Composable
 fun AnaHudEkrani(
@@ -72,7 +73,14 @@ fun AnaHudEkrani(
     val taniyici = remember {
         KonusmaTaniyici(
             context,
-            onSonuc = { viewModel.sesSonucu(it) },
+            onSonuc = { taninan ->
+                val temiz = UyandiriciKelimeMotoru.temizle(taninan)
+                if (temiz.isBlank()) {
+                    viewModel.hataAyarla("Bir komut algılanmadı.")
+                } else {
+                    viewModel.sesSonucu(temiz)
+                }
+            },
             onHata = { viewModel.hataAyarla(it) },
         )
     }
